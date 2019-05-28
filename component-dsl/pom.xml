@@ -57,7 +57,7 @@
 			<plugin>
 				<groupId>biz.aQute.bnd</groupId>
 				<artifactId>bnd-maven-plugin</artifactId>
-				<version>3.4.0</version>
+				<version>${bnd.version}</version>
 				<executions>
 					<execution>
 						<goals>
@@ -69,7 +69,7 @@
 			<plugin>
 				<groupId>biz.aQute.bnd</groupId>
 				<artifactId>bnd-baseline-maven-plugin</artifactId>
-				<version>3.4.0</version>
+				<version>${bnd.version}</version>
 				<configuration>
 					<base>
 						<version>1.2.0</version>
@@ -86,29 +86,19 @@
 			</plugin>
 		</plugins>
 	</build>
+
 	<dependencies>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.core</artifactId>
-			<version>6.0.0</version>
-		</dependency>
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.service.cm</artifactId>
 			<version>1.5.0</version>
 		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.12</version>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 
 	<scm>
-		<connection>scm:git:git@github.com:apache/aries-component-dsl.git/component-dsl</connection>
-		<developerConnection>scm:git:git@github.com:apache/aries-component-dsl.git/component-dsl</developerConnection>
-		<url>https://github.com/apache/aries-component-dsl/component-dsl</url>
+		<connection>scm:git:git@github.com:apache/aries-component-dsl.git</connection>
+		<developerConnection>scm:git:git@github.com:apache/aries-component-dsl.git</developerConnection>
+		<url>https://github.com/apache/aries-component-dsl</url>
 	</scm>
 
 </project>

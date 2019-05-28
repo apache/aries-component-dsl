@@ -33,6 +33,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<bnd.version>4.2.0</bnd.version>
 	</properties>
 
 	<build>
@@ -59,7 +60,7 @@
 			<plugin>
 				<groupId>biz.aQute.bnd</groupId>
 				<artifactId>bnd-maven-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>${bnd.version}</version>
 				<executions>
 					<execution>
 						<goals>
@@ -71,31 +72,24 @@
 		</plugins>
 	</build>
 
+	<dependencies>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>osgi.core</artifactId>
+			<version>6.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+		</dependency>
+	</dependencies>
+
 	<modules>
 		<module>component-dsl</module>
 		<module>itests</module>
 		<module>itests-run</module>
 	</modules>
-
-	<repositories>
-		<repository>
-			<id>osgi-snapshots</id>
-			<url>https://oss.sonatype.org/content/groups/osgi/</url>
-			<layout>default</layout>
-		</repository>
-		<repository>
-			<id>bnd-snapshots</id>
-			<url>https://bndtools.ci.cloudbees.com/job/bnd.master/lastSuccessfulBuild/artifact/dist/bundles/</url>
-			<layout>default</layout>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>bnd-snapshots</id>
-			<url>https://bndtools.ci.cloudbees.com/job/bnd.master/lastSuccessfulBuild/artifact/dist/bundles/</url>
-			<layout>default</layout>
-		</pluginRepository>
-	</pluginRepositories>
 
 	<scm>
 		<connection>scm:git:git@github.com:apache/aries-component-dsl.git</connection>

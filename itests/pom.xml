@@ -35,22 +35,12 @@
 			<artifactId>org.apache.aries.component-dsl.component-dsl</artifactId>
 			<version>1.2.2-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.core</artifactId>
-			<version>6.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.12</version>
-		</dependency>
 	</dependencies>
 
 	<scm>
-		<connection>scm:git:git@github.com:apache/aries-component-dsl.git/itests</connection>
-		<developerConnection>scm:git:git@github.com:apache/aries-component-dsl.git/itests</developerConnection>
-		<url>https://github.com/apache/aries-component-dsl/itests</url>
+		<connection>scm:git:git@github.com:apache/aries-component-dsl.git</connection>
+		<developerConnection>scm:git:git@github.com:apache/aries-component-dsl.git</developerConnection>
+		<url>https://github.com/apache/aries-component-dsl</url>
 	</scm>
 
 </project>
