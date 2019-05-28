@@ -17,9 +17,9 @@
 
 Bundle-Description: Integration Test bundle for component DSL
 
-Private-Package:\
-	org.apache.aries.component.dsl,\
-	org.apache.aries.component.dsl.function,\
-	org.apache.aries.component.dsl.internal,\
+Export-Package:\
+	org.apache.aries.component.dsl;-split-package:=merge-first,\
+	org.apache.aries.component.dsl.function;-split-package:=merge-first,\
+	org.apache.aries.component.dsl.internal;-split-package:=merge-first,\
 
 Test-Cases: ${classes;CONCRETE;ANNOTATED;org.junit.Test}
