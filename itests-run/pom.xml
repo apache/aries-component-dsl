@@ -97,10 +97,10 @@
         </dependency>
     </dependencies>
 
-    <scm>
-        <connection>scm:svn:https://svn.apache.org/repos/asf/aries/trunk/component-dsl/itests-run</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/aries/trunk/component-dsl/itests-run</developerConnection>
-        <url>http://svn.apache.org/viewvc/aries/trunk/component-dsl/itests-run</url>
-    </scm>
-
+	<scm>
+		<connection>scm:git:git@github.com:apache/aries-component-dsl.git/itests-run</connection>
+		<developerConnection>scm:git:git@github.com:apache/aries-component-dsl.git/itests-run</developerConnection>
+		<url>https://github.com/apache/aries-component-dsl/itests-run</url>
+	</scm>
+	
 </project>

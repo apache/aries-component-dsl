@@ -96,6 +96,12 @@
             <layout>default</layout>
         </pluginRepository>
     </pluginRepositories>
+	
+	<scm>
+		<connection>scm:git:git@github.com:apache/aries-component-dsl.git</connection>
+		<developerConnection>scm:git:git@github.com:apache/aries-component-dsl.git</developerConnection>
+		<url>https://github.com/apache/aries-component-dsl</url>
+	</scm>
 
 	<scm>
 		<connection>scm:svn:https://svn.apache.org/repos/asf/aries/trunk/component-dsl</connection>

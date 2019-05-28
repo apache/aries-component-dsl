@@ -104,10 +104,11 @@
 			<scope>test</scope>
 		</dependency>
     </dependencies>
+	
 	<scm>
-		<connection>scm:svn:https://svn.apache.org/repos/asf/aries/trunk/component-dsl/component-dsl</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/aries/trunk/component-dsl/component-dsl</developerConnection>
-		<url>http://svn.apache.org/viewvc/aries/trunk/component-dsl/component-dsl</url>
+		<connection>scm:git:git@github.com:apache/aries-component-dsl.git/component-dsl</connection>
+		<developerConnection>scm:git:git@github.com:apache/aries-component-dsl.git/component-dsl</developerConnection>
+		<url>https://github.com/apache/aries-component-dsl/component-dsl</url>
 	</scm>
-
+	
 </project>
