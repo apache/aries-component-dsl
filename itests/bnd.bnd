@@ -22,6 +22,4 @@ Private-Package:\
 	org.apache.aries.component.dsl.function,\
 	org.apache.aries.component.dsl.internal,\
 
-Test-Cases: \
-    ${classes;CONCRETE;EXTENDS;junit.framework.TestCase},\
-    ${classes;CONCRETE;ANNOTATED;org.junit.Test}
+Test-Cases: ${classes;CONCRETE;ANNOTATED;org.junit.Test}
