@@ -1,0 +1,15 @@
+.project
+.settings
+.idea
+*.iml
+.classpath
+.project
+.settings/
+*/bin/
+**/build/
+**/generated/
+**/personal.bnd
+**/target/
+*/*.jar
+*/cnf/
+*/TEST-*.xml
