@@ -25,16 +25,16 @@
 	<packaging>pom</packaging>
 
 	<parent>
-        <groupId>org.apache</groupId>
-        <artifactId>apache</artifactId>
-        <version>17</version>
-        <relativePath />
-    </parent>
+		<groupId>org.apache</groupId>
+		<artifactId>apache</artifactId>
+		<version>17</version>
+		<relativePath />
+	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -72,41 +72,35 @@
 	</build>
 
 	<modules>
-        <module>component-dsl</module>
-        <module>itests</module>
-        <module>itests-run</module>
-    </modules>
+		<module>component-dsl</module>
+		<module>itests</module>
+		<module>itests-run</module>
+	</modules>
 
 	<repositories>
-        <repository>
-            <id>osgi-snapshots</id>
-            <url>https://oss.sonatype.org/content/groups/osgi/</url>
-            <layout>default</layout>
-        </repository>
-        <repository>
-            <id>bnd-snapshots</id>
-            <url>https://bndtools.ci.cloudbees.com/job/bnd.master/lastSuccessfulBuild/artifact/dist/bundles/</url>
-            <layout>default</layout>
-        </repository>
-    </repositories>
+		<repository>
+			<id>osgi-snapshots</id>
+			<url>https://oss.sonatype.org/content/groups/osgi/</url>
+			<layout>default</layout>
+		</repository>
+		<repository>
+			<id>bnd-snapshots</id>
+			<url>https://bndtools.ci.cloudbees.com/job/bnd.master/lastSuccessfulBuild/artifact/dist/bundles/</url>
+			<layout>default</layout>
+		</repository>
+	</repositories>
 	<pluginRepositories>
-        <pluginRepository>
-            <id>bnd-snapshots</id>
-            <url>https://bndtools.ci.cloudbees.com/job/bnd.master/lastSuccessfulBuild/artifact/dist/bundles/</url>
-            <layout>default</layout>
-        </pluginRepository>
-    </pluginRepositories>
-	
+		<pluginRepository>
+			<id>bnd-snapshots</id>
+			<url>https://bndtools.ci.cloudbees.com/job/bnd.master/lastSuccessfulBuild/artifact/dist/bundles/</url>
+			<layout>default</layout>
+		</pluginRepository>
+	</pluginRepositories>
+
 	<scm>
 		<connection>scm:git:git@github.com:apache/aries-component-dsl.git</connection>
 		<developerConnection>scm:git:git@github.com:apache/aries-component-dsl.git</developerConnection>
 		<url>https://github.com/apache/aries-component-dsl</url>
-	</scm>
-
-	<scm>
-		<connection>scm:svn:https://svn.apache.org/repos/asf/aries/trunk/component-dsl</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/aries/trunk/component-dsl</developerConnection>
-		<url>http://svn.apache.org/viewvc/aries/trunk/component-dsl</url>
 	</scm>
 
 </project>
