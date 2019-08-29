@@ -617,36 +617,39 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 					try {
 						Runnable terminator = op.publish(t);
 
+						OSGiResult result = () -> {
+							try {
+								onRemovedBefore.accept(t);
+							}
+							catch (Exception e) {
+								//TODO: logging
+							}
+
+							try {
+								terminator.run();
+							}
+							catch (Exception e) {
+								//TODO: logging
+							}
+
+							try {
+								onRemovedAfter.accept(t);
+							}
+							catch (Exception e) {
+								//TODO: logging
+							}
+						};
+
 						try {
 							onAddedAfter.accept(t);
 						}
 						catch (Exception e) {
-							//TODO: logging
+							result.run();
+
+							throw e;
 						}
 
-						return
-							() -> {
-								try {
-									onRemovedBefore.accept(t);
-								}
-								catch (Exception e) {
-									//TODO: logging
-								}
-
-								try {
-									terminator.run();
-								}
-								catch (Exception e) {
-									//TODO: logging
-								}
-
-								try {
-									onRemovedAfter.accept(t);
-								}
-								catch (Exception e) {
-									//TODO: logging
-								}
-							};
+						return result;
 					}
 					catch (Exception e) {
 						try {

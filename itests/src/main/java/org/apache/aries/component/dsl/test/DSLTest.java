@@ -268,6 +268,31 @@ public class DSLTest {
     }
 
     @Test
+    public void testEffectsErrorOnAddedAfter() {
+        ArrayList<Object> effects = new ArrayList<>();
+
+        OSGi<Integer> program = just(Arrays.asList(1, 2, 3, 4)).
+            recoverWith((__, e) -> nothing()).
+            effects(
+            effects::add,
+            i -> {
+                if (i % 2 == 0) {
+                    throw new RuntimeException();
+                }
+            },
+            __ -> {},
+            effects::remove
+        );
+
+        try (OSGiResult result = program.run(bundleContext)) {
+            assertEquals(Arrays.asList(1, 3), effects);
+        }
+
+        assertEquals(Collections.emptyList(), effects);
+    }
+
+
+    @Test
     public void testCoalesce() {
         ProbeImpl<String> program1 = new ProbeImpl<>();
         ProbeImpl<String> program2 = new ProbeImpl<>();

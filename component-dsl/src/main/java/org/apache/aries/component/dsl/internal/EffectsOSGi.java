@@ -17,6 +17,8 @@
 
 package org.apache.aries.component.dsl.internal;
 
+import org.apache.aries.component.dsl.OSGiResult;
+
 /**
  * @author Carlos Sierra Andrés
  */
@@ -32,36 +34,39 @@ public class EffectsOSGi extends OSGiImpl<Void> {
             try {
                 Runnable terminator = op.publish(null);
 
+                OSGiResult result = () -> {
+                    try {
+                        onRemovingBefore.run();
+                    }
+                    catch (Exception e) {
+                        //TODO: logging
+                    }
+
+                    try {
+                        terminator.run();
+                    }
+                    catch (Exception e) {
+                        //TODO: logging
+                    }
+
+                    try {
+                        onRemovingAfter.run();
+                    }
+                    catch (Exception e) {
+                        //TODO: logging
+                    }
+                };
+
                 try {
                     onAddingAfter.run();
                 }
                 catch (Exception e) {
-                    //TODO: logging
+                    result.run();
+
+                    throw e;
                 }
 
-                return new OSGiResultImpl(
-                    () -> {
-                        try {
-                            onRemovingBefore.run();
-                        }
-                        catch (Exception e) {
-                            //TODO: logging
-                        }
-
-                        try {
-                            terminator.run();
-                        }
-                        catch (Exception e) {
-                            //TODO: logging
-                        }
-
-                        try {
-                            onRemovingAfter.run();
-                        }
-                        catch (Exception e) {
-                            //TODO: logging
-                        }
-                 });
+                return new OSGiResultImpl(result);
             }
             catch (Exception e) {
                 try {
