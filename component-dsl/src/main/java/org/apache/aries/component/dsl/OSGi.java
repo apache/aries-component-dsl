@@ -289,16 +289,20 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 
 			return t -> {
 				if (count.getAndIncrement() == 0) {
-					terminator.set(op.apply(t));
+					UpdateSupport.deferPublication(
+						() -> terminator.set(op.apply(t)));
 				}
 
-				return () -> UpdateSupport.defer(() -> {
+				return () -> {
 					if (count.decrementAndGet() == 0) {
-						Runnable runnable = terminator.getAndSet(NOOP);
+						UpdateSupport.deferTermination(() -> {
+							Runnable runnable = terminator.getAndSet(NOOP);
 
-						runnable.run();
+							runnable.run();
+						});
 					}
-				});
+
+				};
 			};
 		});
 	}

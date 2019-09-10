@@ -23,6 +23,7 @@ import org.apache.aries.component.dsl.Publisher;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Carlos Sierra Andrés
@@ -48,7 +49,8 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
                 final int pos = i;
 
                 publishers[i] = t -> {
-                    OSGiResult result;
+                    AtomicReference<OSGiResult> result =
+                        new AtomicReference<>();
 
                     synchronized (initialized) {
                         atomicInteger.incrementAndGet();
@@ -64,35 +66,34 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
                             }
                         }
 
-                        result = op.publish(t);
+                        UpdateSupport.deferPublication(
+                            () -> result.set(op.publish(t)));
                     }
 
-                    return () -> {
+                    return () -> UpdateSupport.deferTermination(() -> {
                         synchronized (initialized) {
-                            result.close();
+                            result.get().close();
 
-                            UpdateSupport.defer(() -> {
-                                int current = atomicInteger.decrementAndGet();
+                            int current = atomicInteger.decrementAndGet();
 
-                                if (!initialized.get()) {
-                                    return;
-                                }
+                            if (!initialized.get()) {
+                                return;
+                            }
 
-                                if (pos <= index.get() && current == 0) {
-                                    for (int j = pos + 1; j < results.length; j++) {
-                                        results[j] = programs[j].run(
-                                            bundleContext, publishers[j]);
+                            if (pos <= index.get() && current == 0) {
+                                for (int j = pos + 1; j < results.length; j++) {
+                                    results[j] = programs[j].run(
+                                        bundleContext, publishers[j]);
 
-                                        index.set(j);
+                                    index.set(j);
 
-                                        if (atomicIntegers[j].get() > 0) {
-                                            break;
-                                        }
+                                    if (atomicIntegers[j].get() > 0) {
+                                        break;
                                     }
                                 }
-                            });
+                            }
                         }
-                    };
+                    });
                 };
             }
 

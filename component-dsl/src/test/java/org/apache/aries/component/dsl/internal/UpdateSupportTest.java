@@ -37,12 +37,27 @@ public class UpdateSupportTest {
         UpdateSupport.runUpdate(() -> {
             list.add(1);
 
-            UpdateSupport.defer(() -> list.add(3));
+            UpdateSupport.deferPublication(() -> list.add(4));
+            UpdateSupport.deferTermination(() -> list.add(3));
 
             list.add(2);
         });
 
-        assertEquals(Arrays.asList(1, 2, 3), list);
+        assertEquals(Arrays.asList(1, 2, 3, 4), list);
+    }
+
+    @Test
+    public void testDeferOutsideUpdate() {
+        List<Integer> list = new ArrayList<>();
+
+        list.add(1);
+
+        UpdateSupport.deferPublication(() -> list.add(2));
+        UpdateSupport.deferTermination(() -> list.add(3));
+
+        list.add(4);
+
+        assertEquals(Arrays.asList(1, 2, 3, 4), list);
     }
 
     @Test
@@ -52,48 +67,58 @@ public class UpdateSupportTest {
         UpdateSupport.runUpdate(() -> {
             list.add(1);
 
-            UpdateSupport.defer(() -> list.add(6));
+            UpdateSupport.deferTermination(() -> list.add(9));
 
             UpdateSupport.runUpdate(() -> {
                 list.add(2);
 
-                UpdateSupport.defer(() -> {
+                UpdateSupport.deferTermination(() -> {
                     list.add(3);
 
-                    UpdateSupport.defer(() ->
-                        UpdateSupport.defer(() -> list.add(4)));
+                    UpdateSupport.deferTermination(() -> {
+                        UpdateSupport.deferPublication(() -> list.add(4));
+                        UpdateSupport.deferTermination(() -> list.add(5));
 
-                    list.add(5);
+                        UpdateSupport.runUpdate(() -> {
+                            UpdateSupport.deferPublication(() -> list.add(7));
+                            UpdateSupport.deferTermination(() -> list.add(6));
+                        });
+                    });
+
+                    list.add(8);
                 });
             });
+
+            UpdateSupport.deferPublication(() -> list.add(10));
         });
 
-        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), list);
+        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), list);
     }
 
     @Test
-    public void testDeferNestedStackWithUpdate() {
+    public void testDeferTerminationNestedStackWithUpdate() {
         List<Integer> list = new ArrayList<>();
 
         UpdateSupport.runUpdate(() -> {
             list.add(1);
 
-            UpdateSupport.defer(() -> list.add(9));
+            UpdateSupport.deferTermination(() -> list.add(9));
 
             UpdateSupport.runUpdate(() -> {
                 list.add(2);
 
-                UpdateSupport.defer(() -> {
+                UpdateSupport.deferTermination(() -> {
                     UpdateSupport.runUpdate(
                         () -> {
                             list.add(4);
 
-                            UpdateSupport.defer(
+                            UpdateSupport.deferTermination(
                                 () -> UpdateSupport.runUpdate(
                                     () -> {
                                         list.add(6);
 
-                                        UpdateSupport.defer(() -> list.add(8));
+                                        UpdateSupport.deferTermination(
+                                            () -> list.add(8));
 
                                         list.add(7);
                                     }));
@@ -110,13 +135,13 @@ public class UpdateSupportTest {
     }
 
     @Test
-    public void testDeferStack() {
+    public void testDeferTerminationStack() {
         List<Integer> list = new ArrayList<>();
 
         UpdateSupport.runUpdate(() -> {
             list.add(1);
 
-            UpdateSupport.defer(() -> list.add(6));
+            UpdateSupport.deferTermination(() -> list.add(6));
 
             UpdateSupport.runUpdate(() -> {
                 list.add(2);
@@ -124,10 +149,10 @@ public class UpdateSupportTest {
                 UpdateSupport.runUpdate(() -> {
                     list.add(3);
 
-                    UpdateSupport.defer(() -> list.add(4));
+                    UpdateSupport.deferTermination(() -> list.add(4));
                 });
 
-                UpdateSupport.defer(() -> list.add(5));
+                UpdateSupport.deferTermination(() -> list.add(5));
             });
         });
 

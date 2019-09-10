@@ -26,11 +26,22 @@ import java.util.LinkedList;
 public class UpdateSupport {
 
     private static final ThreadLocal<Deque<Deque<Runnable>>>
+        deferredPublishersStack = ThreadLocal.withInitial(LinkedList::new);
+    private static final ThreadLocal<Deque<Deque<Runnable>>>
         deferredTerminatorsStack = ThreadLocal.withInitial(LinkedList::new);
     private static final ThreadLocal<Boolean> isUpdate =
         ThreadLocal.withInitial(() -> Boolean.FALSE);
 
-    public static void defer(Runnable runnable) {
+    public static void deferPublication(Runnable runnable) {
+        if (isUpdate.get()) {
+            deferredPublishersStack.get().peekLast().addLast(runnable);
+        }
+        else {
+            runnable.run();
+        }
+    }
+
+    public static void deferTermination(Runnable runnable) {
         if (isUpdate.get()) {
             deferredTerminatorsStack.get().peekLast().addLast(runnable);
         }
@@ -42,9 +53,13 @@ public class UpdateSupport {
     public static void runUpdate(Runnable runnable) {
         isUpdate.set(true);
 
-        Deque<Deque<Runnable>> deferred = deferredTerminatorsStack.get();
+        Deque<Deque<Runnable>> deferredPublishers =
+            deferredPublishersStack.get();
+        Deque<Deque<Runnable>> deferredTerminators =
+            deferredTerminatorsStack.get();
 
-        deferred.addLast(new LinkedList<>());
+        deferredPublishers.addLast(new LinkedList<>());
+        deferredTerminators.addLast(new LinkedList<>());
 
         try {
             runnable.run();
@@ -58,6 +73,15 @@ public class UpdateSupport {
             for (Runnable terminator : terminators) {
                 terminator.run();
             }
+
+            Deque<Runnable> publishers =
+                deferredPublishersStack.get().removeLast();
+
+            for (Runnable publisher : publishers) {
+                publisher.run();
+            }
+
+            isUpdate.set(!deferredTerminators.isEmpty());
         }
     }
 }
