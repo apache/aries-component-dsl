@@ -59,7 +59,8 @@ public interface Utils {
                 program.splitBy(
                     keyFun,
                     (k, p) ->
-                        highest(p, Comparator.naturalOrder(), q -> OSGi.nothing()).
+                        highest(
+                            p, Comparator.naturalOrder(), q -> OSGi.nothing()).
                             flatMap(t ->
                                 valueFun.apply(t).effects(
                                     v -> map.put(k, v),
