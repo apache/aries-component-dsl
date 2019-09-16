@@ -70,13 +70,6 @@ public class EffectsOSGi extends OSGiImpl<Void> {
             }
             catch (Exception e) {
                 try {
-                    onRemovingBefore.run();
-                }
-                catch (Exception e1) {
-                    //TODO: logging
-                }
-
-                try {
                     onRemovingAfter.run();
                 }
                 catch (Exception e1) {

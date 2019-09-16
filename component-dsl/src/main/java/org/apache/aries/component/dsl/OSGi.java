@@ -657,13 +657,6 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 					}
 					catch (Exception e) {
 						try {
-							onRemovedBefore.accept(t);
-						}
-						catch (Exception e1) {
-							//TODO: logging
-						}
-
-						try {
 							onRemovedAfter.accept(t);
 						}
 						catch (Exception e1) {
