@@ -31,6 +31,7 @@ import org.apache.aries.component.dsl.function.Function8;
 import org.apache.aries.component.dsl.function.Function9;
 import org.apache.aries.component.dsl.internal.CoalesceOSGiImpl;
 import org.apache.aries.component.dsl.internal.ConfigurationOSGiImpl;
+import org.apache.aries.component.dsl.internal.DistributeOSGiImpl;
 import org.apache.aries.component.dsl.internal.EffectsOSGi;
 import org.apache.aries.component.dsl.internal.NothingOSGiImpl;
 import org.apache.aries.component.dsl.internal.Pad;
@@ -67,12 +68,14 @@ import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -573,32 +576,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	}
 
 	default <S> OSGi<S> distribute(Function<OSGi<T>, OSGi<S>> ... funs) {
-		return fromOsgiRunnable((bundleContext, publisher) -> {
-			List<Pad<T, S>> pads =
-				Arrays.stream(
-					funs
-				).map(
-					fun -> new Pad<>(bundleContext, fun, publisher)
-				).collect(
-					Collectors.toList()
-				);
-
-			OSGiResult result = run(
-				bundleContext,
-				t -> {
-					List<Runnable> terminators =
-						pads.stream().map(p -> p.publish(t)).collect(
-							Collectors.toList());
-
-					return () -> terminators.forEach(Runnable::run);
-				});
-
-			return () -> {
-				result.close();
-
-				pads.forEach(Pad::close);
-			};
-		});
+		return new DistributeOSGiImpl<>(this, funs);
 	}
 
 	default OSGi<T> effects(

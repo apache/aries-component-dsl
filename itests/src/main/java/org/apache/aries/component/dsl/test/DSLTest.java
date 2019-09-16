@@ -31,9 +31,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
-import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.util.tracker.ServiceTracker;
 
 import java.io.IOException;
@@ -1056,6 +1054,64 @@ public class DSLTest {
         }
         catch (Exception e) {
             assertEquals(Collections.emptyList(), results);
+        }
+    }
+
+    @Test
+    public void testDistributeWithError() {
+        ArrayList<Integer> results1 = new ArrayList<>();
+        ArrayList<Integer> results2 = new ArrayList<>();
+        ArrayList<Integer> results3 = new ArrayList<>();
+        ArrayList<Integer> results4 = new ArrayList<>();
+
+        OSGi<Integer> program = OSGi.just(
+            Arrays.asList(1, 2, 3)
+        ).distribute(
+            p1 -> p1.effects(results1::add, results1::remove),
+            p2 -> p2.effects(results2::add, results2::remove),
+            p3 -> p3.filter(i -> {
+                    if (i == 2) {
+                        throw new IllegalArgumentException();
+                    }
+
+                    return true;
+                }
+            ).effects(results3::add, results3::remove),
+            p4 -> p4.effects(results4::add, results4::remove)
+        );
+
+        try (OSGiResult run = program.run(bundleContext)) {
+
+        } catch (Exception e) {
+            assertEquals(Collections.emptyList(), results1);
+            assertEquals(Collections.emptyList(), results2);
+            assertEquals(Collections.emptyList(), results3);
+            assertEquals(Collections.emptyList(), results4);
+        }
+
+        program = OSGi.just(
+            Arrays.asList(1, 2, 3)
+        ).recoverWith(
+            (i, e) -> nothing()
+        ).distribute(
+            p1 -> p1.effects(results1::add, results1::remove),
+            p2 -> p2.effects(results2::add, results2::remove),
+            p3 -> p3.filter(i -> {
+                    if (i == 2) {
+                        throw new IllegalArgumentException();
+                    }
+
+                    return true;
+                }
+            ).effects(results3::add, results3::remove),
+            p4 -> p4.effects(results4::add, results4::remove)
+        );
+
+        try (OSGiResult run = program.run(bundleContext)) {
+            assertEquals(Arrays.asList(1, 3), results1);
+            assertEquals(Arrays.asList(1, 3), results2);
+            assertEquals(Arrays.asList(1, 3), results3);
+            assertEquals(Arrays.asList(1, 3), results4);
         }
     }
 
