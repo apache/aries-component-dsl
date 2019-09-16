@@ -1025,6 +1025,41 @@ public class DSLTest {
     }
 
     @Test
+    public void testAllWithErrors() {
+        ArrayList<Integer> results = new ArrayList<>();
+
+        OSGi<Integer> program = OSGi.all(
+            just(1),
+            just(2),
+            just(3),
+            just(4),
+            just(5)
+        ).effects(
+            results::add, results::remove
+        );
+
+        try(OSGiResult result = program.run(bundleContext)) {
+            assertEquals(Arrays.asList(1, 2, 3, 4, 5), results);
+        }
+
+        try(OSGiResult result = program.filter(i -> {
+                if (i == 5) {
+                    throw new IllegalArgumentException();
+                }
+
+                return true;
+            }
+        ).run(
+            bundleContext)
+        ) {
+            fail();
+        }
+        catch (Exception e) {
+            assertEquals(Collections.emptyList(), results);
+        }
+    }
+
+    @Test
     public void testMultipleApplies() {
         ArrayList<Integer> results = new ArrayList<>();
         AtomicInteger results2 = new AtomicInteger();

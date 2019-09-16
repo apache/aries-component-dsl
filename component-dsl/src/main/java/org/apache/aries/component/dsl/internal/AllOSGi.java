@@ -21,9 +21,7 @@ import org.apache.aries.component.dsl.OSGi;
 import org.apache.aries.component.dsl.OSGiResult;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.ListIterator;
-import java.util.stream.Collectors;
 
 /**
  * @author Carlos Sierra Andrés
@@ -33,23 +31,35 @@ public class AllOSGi<T> extends OSGiImpl<T> {
     @SafeVarargs
     public AllOSGi(OSGi<T>... programs) {
         super((bundleContext, op) -> {
-            ArrayList<OSGiResult> results = new ArrayList<>();
+            ArrayList<OSGiResult> results = new ArrayList<>(programs.length);
 
-            results.addAll(
-                Arrays.stream(programs).
-                    map(o -> o.run(bundleContext, op)).
-                    collect(Collectors.toList()));
+            try {
+                for (OSGi<T> program : programs) {
+                    results.add(program.run(bundleContext, op));
+                }
+            }
+            catch (Exception e) {
+                cleanUp(results);
+
+                throw e;
+            }
 
             return new OSGiResultImpl(
-                () -> {
-                    ListIterator<OSGiResult> iterator =
-                        results.listIterator(results.size());
-
-                    while (iterator.hasPrevious()) {
-                        iterator.previous().close();
-                    }
-                }
+                () -> cleanUp(results)
             );
         });
+    }
+
+    private static void cleanUp(ArrayList<OSGiResult> results) {
+        ListIterator<OSGiResult> iterator =
+            results.listIterator(results.size());
+
+        while (iterator.hasPrevious()) {
+            try {
+                iterator.previous().close();
+            }
+            catch (Exception ex) {
+            }
+        }
     }
 }
