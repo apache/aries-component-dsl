@@ -71,6 +71,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class DSLTest {
 
@@ -987,6 +988,38 @@ public class DSLTest {
             }))
         {
             assertEquals(25, atomicInteger.get());
+        }
+
+    }
+
+    @Test
+    public void testJustWithError() {
+        ArrayList<Integer> results = new ArrayList<>();
+
+        OSGi<Integer> program = just(
+            Arrays.asList(1, 2, 3, 4, 5)
+        ).effects(
+            results::add, results::remove
+        );
+
+        try(OSGiResult result = program.run(bundleContext)) {
+            assertEquals(Arrays.asList(1, 2, 3, 4, 5), results);
+        }
+
+        try(OSGiResult result = program.filter(i -> {
+                if (i == 5) {
+                    throw new IllegalArgumentException();
+                }
+
+                return true;
+            }
+        ).run(
+            bundleContext)
+        ) {
+            fail();
+        }
+        catch (Exception e) {
+            assertEquals(Collections.emptyList(), results);
         }
 
     }

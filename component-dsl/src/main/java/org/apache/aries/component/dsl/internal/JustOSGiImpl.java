@@ -19,6 +19,7 @@
 package org.apache.aries.component.dsl.internal;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -35,22 +36,39 @@ public class JustOSGiImpl<T> extends OSGiImpl<T> {
 		this(() -> t);
 	}
 
-	public JustOSGiImpl(Supplier<Collection<T>> t) {
+	public JustOSGiImpl(Supplier<Collection<T>> supplier) {
 		super((bundleContext, op) -> {
 
-			List<Runnable> references =
-				t.get().stream().map(op).collect(Collectors.toList());
+			Collection<T> collection = supplier.get();
+			ArrayList<Runnable> references = new ArrayList<>(collection.size());
+
+			try {
+				for (T t : collection) {
+					references.add(op.publish(t));
+				}
+			}
+			catch (Exception e) {
+				cleanUp(references);
+
+				throw e;
+			}
 
 			return new OSGiResultImpl(
-				() -> {
-					ListIterator<Runnable> iterator =
-						references.listIterator(references.size());
-
-					while (iterator.hasPrevious()) {
-						iterator.previous().run();
-					}
-				});
+				() -> cleanUp(references));
 		});
+	}
+
+	private static void cleanUp(ArrayList<Runnable> references) {
+		ListIterator<Runnable> iterator =
+			references.listIterator(references.size());
+
+		while (iterator.hasPrevious()) {
+			try {
+				iterator.previous().run();
+			}
+			catch (Exception e) {
+			}
+		}
 	}
 
 	public JustOSGiImpl(T t) {
