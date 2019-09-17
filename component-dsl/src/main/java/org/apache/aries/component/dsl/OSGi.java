@@ -376,7 +376,8 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	}
 
 	static <T> OSGi<ServiceRegistration<T>> register(
-		Class<T> clazz, Supplier<T> service, Supplier<Map<String, ?>> properties) {
+		Class<T> clazz, Supplier<T> service,
+		Supplier<Map<String, ?>> properties) {
 
 		return new ServiceRegistrationOSGiImpl<>(clazz, service, properties);
 	}
@@ -453,7 +454,8 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	}
 
 	static <T> OSGi<CachingServiceReference<T>> serviceReferences(
-		Class<T> clazz, Refresher<? super CachingServiceReference<T>> onModified) {
+		Class<T> clazz,
+		Refresher<? super CachingServiceReference<T>> onModified) {
 
 		return new ServiceReferenceOSGi<>(null, clazz, onModified);
 	}
