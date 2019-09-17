@@ -21,7 +21,7 @@
 
 	<groupId>org.apache.aries.component-dsl</groupId>
 	<artifactId>org.apache.aries.component-dsl.parent</artifactId>
-	<version>1.2.2</version>
+	<version>1.2.3-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<parent>
@@ -134,7 +134,7 @@
 		<connection>scm:git:git@github.com:apache/aries-component-dsl.git</connection>
 		<developerConnection>scm:git:git@github.com:apache/aries-component-dsl.git</developerConnection>
 		<url>https://github.com/apache/aries-component-dsl</url>
-	  <tag>org.apache.aries.component-dsl.parent-1.2.2</tag>
+	  <tag>HEAD</tag>
   </scm>
 
 </project>
