@@ -68,15 +68,7 @@ import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
@@ -496,56 +488,72 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 
 	default  <S> OSGi<S> applyTo(OSGi<Function<T, S>> fun) {
 		return fromOsgiRunnable((bundleContext, op) -> {
-			ConcurrentDoublyLinkedList<T> identities =
-				new ConcurrentDoublyLinkedList<>();
-
-			ConcurrentDoublyLinkedList<Function<T, S>> funs =
-				new ConcurrentDoublyLinkedList<>();
-
-			OSGiResult myResult = run(
-				bundleContext,
-				t -> {
-					ConcurrentDoublyLinkedList.Node node =
-						identities.addLast(t);
-
-					List<Runnable> terminators = funs.stream().map(
-						f -> op.apply(f.apply(t))
-					).collect(
-						Collectors.toList()
-					);
-
-					return () -> {
-						node.remove();
-
-						terminators.forEach(Runnable::run);
-					};
-				}
-			);
+			ConcurrentDoublyLinkedList<T> identities = new ConcurrentDoublyLinkedList<>();
+			ConcurrentDoublyLinkedList<Function<T,S>> functions = new ConcurrentDoublyLinkedList<>();
+			IdentityHashMap<T, IdentityHashMap<Function<T, S>, Runnable>>
+				terminators = new IdentityHashMap<>();
 
 			OSGiResult funRun = fun.run(
 				bundleContext,
 				f -> {
-					ConcurrentDoublyLinkedList.Node node = funs.addLast(f);
+					synchronized(identities) {
+						ConcurrentDoublyLinkedList.Node node = functions.addLast(f);
 
-					List<Runnable> terminators = identities.stream().map(
-						t -> op.apply(f.apply(t))
-					).collect(
-						Collectors.toList()
-					);
+						for (T t : identities) {
+							IdentityHashMap<Function<T, S>, Runnable> terminatorMap =
+								terminators.computeIfAbsent(
+									t, __ -> new IdentityHashMap<>());
+							terminatorMap.put(f, op.apply(f.apply(t)));
+						}
 
-					return () -> {
-						node.remove();
+						return () -> {
+							synchronized (identities) {
+								node.remove();
 
-						terminators.forEach(Runnable::run);
-					};
-				});
+								identities.forEach(t -> {
+									Runnable terminator = terminators.get(t).remove(f);
 
-			return
-				() -> {
-					myResult.close();
+									terminator.run();
+								});
+							}
+						};
+					}
+				}
+			);
 
-					funRun.close();
-				};
+			OSGiResult myRun = run(
+				bundleContext,
+				t -> {
+					synchronized (identities) {
+						ConcurrentDoublyLinkedList.Node node = identities.addLast(t);
+
+						for (Function<T, S> f : functions) {
+							IdentityHashMap<Function<T, S>, Runnable> terminatorMap =
+								terminators.computeIfAbsent(
+									t, __ -> new IdentityHashMap<>());
+							terminatorMap.put(f, op.apply(f.apply(t)));
+						}
+
+						return () -> {
+							synchronized (identities) {
+								node.remove();
+
+								functions.forEach(f -> {
+									Runnable terminator = terminators.get(t).remove(f);
+
+									terminator.run();
+								});
+							}
+						};
+					}
+				}
+			);
+
+			return () -> {
+				myRun.close();
+
+				funRun.close();
+			};
 		});
 	}
 
