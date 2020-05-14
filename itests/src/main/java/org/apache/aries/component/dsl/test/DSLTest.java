@@ -51,17 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.apache.aries.component.dsl.OSGi.NOOP;
-import static org.apache.aries.component.dsl.OSGi.coalesce;
-import static org.apache.aries.component.dsl.OSGi.configuration;
-import static org.apache.aries.component.dsl.OSGi.configurations;
-import static org.apache.aries.component.dsl.OSGi.just;
-import static org.apache.aries.component.dsl.OSGi.nothing;
-import static org.apache.aries.component.dsl.OSGi.onClose;
-import static org.apache.aries.component.dsl.OSGi.once;
-import static org.apache.aries.component.dsl.OSGi.register;
-import static org.apache.aries.component.dsl.OSGi.serviceReferences;
-import static org.apache.aries.component.dsl.OSGi.services;
+import static org.apache.aries.component.dsl.OSGi.*;
 import static org.apache.aries.component.dsl.Utils.accumulate;
 import static org.apache.aries.component.dsl.Utils.highest;
 import static org.junit.Assert.assertEquals;
@@ -233,6 +223,44 @@ public class DSLTest {
         });
 
         assertEquals(15, integer.get());
+    }
+
+    @Test
+    public void testCombine() {
+        List<Integer> list = new ArrayList<>();
+
+        ProbeImpl<Integer> probe1 = new ProbeImpl<>();
+        ProbeImpl<Integer> probe2 = new ProbeImpl<>();
+
+        OSGi<Integer> program = combine(
+            (x, y) -> x * y, probe1, probe2
+        ).effects(
+            list::add, list::remove
+        );
+
+        OSGiResult run = program.run(bundleContext);
+
+        Publisher<? super Integer> publisher1 = probe1.getPublisher();
+        Publisher<? super Integer> publisher2 = probe2.getPublisher();
+
+        OSGiResult osgiResult1 = publisher1.publish(3);
+        OSGiResult osgiResult2 = publisher2.publish(5);
+
+        assertTrue(list.contains(15));
+
+        osgiResult1.close();
+
+        assertFalse(list.contains(15));
+
+        publisher1.publish(3);
+
+        assertTrue(list.contains(15));
+
+        osgiResult2.close();
+
+        assertFalse(list.contains(15));
+
+        run.close();
     }
 
     @Test
