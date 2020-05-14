@@ -43,15 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-import static org.apache.aries.component.dsl.OSGi.all;
-import static org.apache.aries.component.dsl.OSGi.bundleContext;
-import static org.apache.aries.component.dsl.OSGi.combine;
-import static org.apache.aries.component.dsl.OSGi.configurations;
-import static org.apache.aries.component.dsl.OSGi.just;
-import static org.apache.aries.component.dsl.OSGi.onClose;
-import static org.apache.aries.component.dsl.OSGi.register;
-import static org.apache.aries.component.dsl.OSGi.serviceReferences;
-import static org.apache.aries.component.dsl.OSGi.services;
+import static org.apache.aries.component.dsl.OSGi.*;
 import static org.apache.aries.component.dsl.Utils.highest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -84,18 +76,20 @@ public class ComponentTest {
     @Test
     public void testComponent() throws IOException {
         OSGi<?> program =
-            configurations("org.components.MyComponent").flatMap(props ->
-            services(Service.class).flatMap(ms ->
-            just(new Component(props, ms)).flatMap(component ->
-            register(Component.class, component, new HashMap<>()).then(
-            all(
-                dynamic(
-                    highestService(ServiceOptional.class),
-                    component::setOptional, c -> component.setOptional(null)),
-                dynamic(
-                    services(ServiceForList.class),
-                    component::addService, component::removeService)
-        )))));
+            combine(
+                Component::new,
+                configurations("org.components.MyComponent"),
+                services(Service.class))
+            .flatMap(component ->
+                register(Component.class, component, new HashMap<>()).then(
+                all(
+                    dynamic(
+                        highestService(ServiceOptional.class),
+                        component::setOptional, c -> component.setOptional(null)),
+                    dynamic(
+                        services(ServiceForList.class),
+                        component::addService, component::removeService)
+            )));
 
         ServiceTracker<Component, Component> serviceTracker =
             new ServiceTracker<>(_bundleContext, Component.class, null);
