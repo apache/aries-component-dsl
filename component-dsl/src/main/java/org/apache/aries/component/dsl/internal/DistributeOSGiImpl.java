@@ -32,15 +32,15 @@ public class DistributeOSGiImpl<T, S> extends OSGiImpl<S> {
     public DistributeOSGiImpl(
         OSGiRunnable<T> operation, Function<OSGi<T>, OSGi<S>>... funs) {
 
-        super((bundleContext, publisher) -> {
+        super((executionContext, publisher) -> {
             Pad<T, S>[] pads = new Pad[funs.length];
 
             for (int i = 0; i < funs.length; i++) {
-                pads[i] = new Pad<>(bundleContext, funs[i], publisher);
+                pads[i] = new Pad<>(executionContext, funs[i], publisher);
             }
 
             OSGiResult result = operation.run(
-                bundleContext,
+                executionContext,
                 t -> {
                     List<Runnable> terminators = new ArrayList<>(funs.length);
 

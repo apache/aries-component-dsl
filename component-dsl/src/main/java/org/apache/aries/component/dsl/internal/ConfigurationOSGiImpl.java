@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ConfigurationOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 
 	public ConfigurationOSGiImpl(String pid) {
-		super((bundleContext, op) -> {
+		super((executionContext, op) -> {
 			AtomicReference<Configuration> atomicReference =
 				new AtomicReference<>(null);
 
@@ -48,6 +48,8 @@ public class ConfigurationOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 			AtomicBoolean closed = new AtomicBoolean();
 
 			CountDownLatch countDownLatch = new CountDownLatch(1);
+
+			BundleContext bundleContext = executionContext.getBundleContext();
 
 			ServiceRegistration<?> serviceRegistration =
 				bundleContext.registerService(
@@ -77,7 +79,7 @@ public class ConfigurationOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 						}
 						else {
 							 configuration = getConfiguration(
-							 	bundleContext, configurationEvent);
+								 bundleContext, configurationEvent);
 
 							if (configuration == null) {
 								return;

@@ -26,7 +26,7 @@ public class IgnoreImpl extends OSGiImpl<Void> {
 
     public IgnoreImpl(OSGi<?> program) {
 
-        super((bundleContext, op) -> program.run(bundleContext, t -> NOOP));
+        super((executionContext, op) -> program.run(executionContext, t -> NOOP));
     }
 
 }

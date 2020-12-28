@@ -28,7 +28,7 @@ public class EffectsOSGi extends OSGiImpl<Void> {
         Runnable onAddingBefore, Runnable onAddingAfter,
         Runnable onRemovingBefore, Runnable onRemovingAfter) {
 
-        super((bundleContext, op) -> {
+        super((executionContext, op) -> {
             onAddingBefore.run();
 
             try {

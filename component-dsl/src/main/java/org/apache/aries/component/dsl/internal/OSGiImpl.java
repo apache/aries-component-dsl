@@ -36,29 +36,29 @@ public class OSGiImpl<T> implements OSGi<T> {
 
 	public static <T> OSGi<T> create(OSGiRunnable<T> runnable) {
 		return new OSGiImpl<>(
-			(b, op) -> new OSGiResultImpl(runnable.run(b, op)));
+			(ec, op) -> new OSGiResultImpl(runnable.run(ec, op)));
 	}
 
 	@Override
-	public OSGiResult run(BundleContext bundleContext) {
-		return run(bundleContext, x -> NOOP);
+	public OSGiResult run(ExecutionContext executionContext) {
+		return run(executionContext, x -> NOOP);
 	}
 
 	public OSGiResult run(
-		BundleContext bundleContext, Publisher<? super T> op) {
+		ExecutionContext executionContext, Publisher<? super T> op) {
 
-		return _operation.run(bundleContext, op);
+		return _operation.run(executionContext, op);
 	}
 
 	static Filter buildFilter(
-		BundleContext bundleContext, String filterString, Class<?> clazz) {
+		ExecutionContext executionContext, String filterString, Class<?> clazz) {
 
 		Filter filter;
 
 		String string = buildFilterString(filterString, clazz);
 
 		try {
-			filter = bundleContext.createFilter(string);
+			filter = executionContext.getBundleContext().createFilter(string);
 		}
 		catch (InvalidSyntaxException e) {
 			throw new RuntimeException(e);

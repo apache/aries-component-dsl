@@ -30,12 +30,12 @@ public class AllOSGi<T> extends OSGiImpl<T> {
 
     @SafeVarargs
     public AllOSGi(OSGi<T>... programs) {
-        super((bundleContext, op) -> {
+        super((executionContext, op) -> {
             ArrayList<OSGiResult> results = new ArrayList<>(programs.length);
 
             try {
                 for (OSGi<T> program : programs) {
-                    results.add(program.run(bundleContext, op));
+                    results.add(program.run(executionContext, op));
                 }
             }
             catch (Exception e) {

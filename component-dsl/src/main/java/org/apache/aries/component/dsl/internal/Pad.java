@@ -19,6 +19,8 @@ package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGi;
 import org.apache.aries.component.dsl.OSGiResult;
+import org.apache.aries.component.dsl.OSGiRunnable;
+import org.apache.aries.component.dsl.OSGiRunnable.ExecutionContext;
 import org.apache.aries.component.dsl.Publisher;
 import org.osgi.framework.BundleContext;
 
@@ -33,7 +35,7 @@ import static org.apache.aries.component.dsl.OSGi.NOOP;
 public class Pad<T, S> implements Publisher<T>, Closeable {
 
     public Pad(
-        BundleContext bundleContext,
+        ExecutionContext bundleContext,
         Function<OSGi<T>, OSGi<S>> fun,
         Publisher<? super S> continuation) {
 

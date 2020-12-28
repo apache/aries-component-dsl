@@ -17,19 +17,15 @@
 
 package org.apache.aries.component.dsl;
 
-import org.apache.aries.component.dsl.internal.HighestRankingOSGi;
-import org.apache.aries.component.dsl.internal.OnlyLastPublisher;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import static org.apache.aries.component.dsl.OSGi.NOOP;
-import static org.apache.aries.component.dsl.OSGi.just;
+import org.apache.aries.component.dsl.internal.HighestRankingOSGi;
+import org.apache.aries.component.dsl.internal.OnlyLastPublisher;
 
 /**
  * @author Carlos Sierra Andrés

@@ -40,11 +40,11 @@ public class ServiceReferenceOSGi<T>
 		String filterString, Class<T> clazz,
 		Refresher<? super CachingServiceReference<T>> refresher) {
 
-		super((bundleContext, op) -> {
+		super((executionContext, op) -> {
 			ServiceTracker<T, ?>
 				serviceTracker = new ServiceTracker<>(
-					bundleContext,
-					buildFilter(bundleContext, filterString, clazz),
+					executionContext.getBundleContext(),
+					buildFilter(executionContext, filterString, clazz),
 					new DefaultServiceTrackerCustomizer<>(op, refresher));
 
 			serviceTracker.open();

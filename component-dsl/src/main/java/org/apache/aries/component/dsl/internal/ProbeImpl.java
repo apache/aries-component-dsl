@@ -41,15 +41,12 @@ public class ProbeImpl<T> extends OSGiImpl<T> {
 
         @Override
         public OSGiResultImpl run(
-            BundleContext bundleContext, Publisher<? super T> op) {
-            _bundleContext = bundleContext;
+            ExecutionContext executionContext, Publisher<? super T> op) {
             _op = op;
 
             return new OSGiResultImpl(
                 () -> {_onClose.close(); _onClose = NOOP;});
         }
-
-        BundleContext _bundleContext;
 
         Publisher<? super T> _op;
     }

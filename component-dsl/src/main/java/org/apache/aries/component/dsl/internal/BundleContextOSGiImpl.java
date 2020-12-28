@@ -25,7 +25,7 @@ import org.osgi.framework.BundleContext;
 public class BundleContextOSGiImpl extends OSGiImpl<BundleContext> {
 
 	public BundleContextOSGiImpl() {
-		super((bundleContext, op) ->
-			new JustOSGiImpl<>(bundleContext).run(bundleContext, op));
+		super((executionContext, op) ->
+			new JustOSGiImpl<>(executionContext.getBundleContext()).run(executionContext, op));
 	}
 }

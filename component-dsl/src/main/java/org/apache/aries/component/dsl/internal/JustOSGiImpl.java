@@ -22,10 +22,8 @@ package org.apache.aries.component.dsl.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * @author Carlos Sierra Andrés
@@ -37,7 +35,7 @@ public class JustOSGiImpl<T> extends OSGiImpl<T> {
 	}
 
 	public JustOSGiImpl(Supplier<Collection<T>> supplier) {
-		super((bundleContext, op) -> {
+		super((executionContext, op) -> {
 
 			Collection<T> collection = supplier.get();
 			ArrayList<Runnable> references = new ArrayList<>(collection.size());

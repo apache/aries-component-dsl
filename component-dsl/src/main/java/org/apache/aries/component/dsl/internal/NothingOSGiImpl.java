@@ -25,6 +25,6 @@ import org.apache.aries.component.dsl.OSGi;
 public class NothingOSGiImpl<S> extends OSGiImpl<S> {
 
 	public NothingOSGiImpl() {
-		super((bundleContext, __) -> new OSGiResultImpl(OSGi.NOOP));
+		super((executionContext, __) -> new OSGiResultImpl(OSGi.NOOP));
 	}
 }

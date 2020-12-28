@@ -28,10 +28,10 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
 public class BundleOSGi extends OSGiImpl<Bundle> {
 
 	public BundleOSGi(int stateMask) {
-		super((bundleContext, op) -> {
+		super((executionContext, op) -> {
 			BundleTracker<Runnable> bundleTracker =
 				new BundleTracker<>(
-					bundleContext, stateMask,
+					executionContext.getBundleContext(), stateMask,
 					new BundleTrackerCustomizer<Runnable>() {
 
 						@Override

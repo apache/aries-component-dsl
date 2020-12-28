@@ -34,7 +34,7 @@ public class HighestRankingOSGi<T> extends OSGiImpl<T> {
         OSGi<T> previous, Comparator<? super T> comparator,
         Function<OSGi<T>, OSGi<T>> notHighest) {
 
-        super((bundleContext, highestPipe) -> {
+        super((executionContext, highestPipe) -> {
             Comparator<Tuple<T>> comparing = Comparator.comparing(
                 Tuple::getT, comparator);
             PriorityQueue<Tuple<T>> set = new PriorityQueue<>(
@@ -42,10 +42,10 @@ public class HighestRankingOSGi<T> extends OSGiImpl<T> {
             AtomicReference<Tuple<T>> sent = new AtomicReference<>();
 
             Pad<T, T> notHighestPad = new Pad<>(
-                bundleContext, notHighest, highestPipe);
+                executionContext, notHighest, highestPipe);
 
             OSGiResult result = previous.run(
-                bundleContext,
+                executionContext,
                 t -> {
                     Tuple<T> tuple = new Tuple<>(t);
 

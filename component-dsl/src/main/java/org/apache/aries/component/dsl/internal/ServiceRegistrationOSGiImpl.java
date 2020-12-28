@@ -35,9 +35,9 @@ public class ServiceRegistrationOSGiImpl<T>
 		Class<T> clazz, Supplier<T> service,
 		Supplier<Map<String, ?>> properties) {
 
-		super((bundleContext, op) -> {
+		super((executionContext, op) -> {
 			ServiceRegistration<?> serviceRegistration =
-				bundleContext.registerService(
+				executionContext.getBundleContext().registerService(
 					clazz, service.get(), getProperties(properties.get()));
 
 			return getServiceRegistrationOSGiResult(serviceRegistration, op);
@@ -48,9 +48,9 @@ public class ServiceRegistrationOSGiImpl<T>
 		Class<T> clazz, ServiceFactory<T> serviceFactory,
 		Supplier<Map<String, ?>> properties) {
 
-		super((bundleContext, op) -> {
+		super((executionContext, op) -> {
 			ServiceRegistration<?> serviceRegistration =
-				bundleContext.registerService(
+				executionContext.getBundleContext().registerService(
 					clazz, serviceFactory,
 					getProperties(properties.get()));
 
@@ -62,9 +62,9 @@ public class ServiceRegistrationOSGiImpl<T>
 		String[] clazz, Supplier<Object> service,
 		Supplier<Map<String, ?>> properties) {
 
-		super((bundleContext, op) -> {
+		super((executionContext, op) -> {
 			ServiceRegistration<?> serviceRegistration =
-				bundleContext.registerService(
+				executionContext.getBundleContext().registerService(
 					clazz, service.get(), new Hashtable<>(properties.get()));
 
 			return getServiceRegistrationOSGiResult(serviceRegistration, op);

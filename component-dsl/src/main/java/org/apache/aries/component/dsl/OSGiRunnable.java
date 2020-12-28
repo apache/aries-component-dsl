@@ -24,10 +24,30 @@ import org.osgi.framework.BundleContext;
  */
 public interface OSGiRunnable<T> {
 
-	default OSGiResult run(BundleContext bundleContext) {
-		return run(bundleContext, (__) -> () -> {});
+	default OSGiResult run(ExecutionContext executionContext) {
+		return run(executionContext, (__) -> () -> {});
 	}
 
-	OSGiResult run(BundleContext bundleContext, Publisher<? super T> andThen);
+	default OSGiResult run(BundleContext bundleContext) {
+		return run(new ExecutionContext(bundleContext), (__) -> () -> {});
+	}
+
+	OSGiResult run(ExecutionContext executionContext, Publisher<? super T> andThen);
+
+	default OSGiResult run(BundleContext bundleContext, Publisher<? super T> andThen) {
+		return run(new ExecutionContext(bundleContext), andThen);
+	}
+
+	public class ExecutionContext {
+		private BundleContext bundleContext;
+
+		public ExecutionContext(BundleContext bundleContext) {
+			this.bundleContext = bundleContext;
+		}
+
+		public BundleContext getBundleContext() {
+			return bundleContext;
+		}
+	}
 
 }

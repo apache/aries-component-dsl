@@ -32,7 +32,7 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
 
     @SafeVarargs
     public CoalesceOSGiImpl(OSGi<T>... programs) {
-        super((bundleContext, op) -> {
+        super((executionContext, op) -> {
             AtomicBoolean initialized = new AtomicBoolean();
             AtomicInteger[] atomicIntegers = new AtomicInteger[programs.length];
             OSGiResult[] results = new OSGiResult[programs.length];
@@ -83,7 +83,7 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
                             if (pos <= index.get() && current == 0) {
                                 for (int j = pos + 1; j < results.length; j++) {
                                     results[j] = programs[j].run(
-                                        bundleContext, publishers[j]);
+                                        executionContext, publishers[j]);
 
                                     index.set(j);
 
@@ -100,7 +100,7 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
             synchronized (initialized) {
                 for (int i = 0; i < publishers.length; i++) {
 
-                    results[i] = programs[i].run(bundleContext, publishers[i]);
+                    results[i] = programs[i].run(executionContext, publishers[i]);
 
                     index.set(i);
 

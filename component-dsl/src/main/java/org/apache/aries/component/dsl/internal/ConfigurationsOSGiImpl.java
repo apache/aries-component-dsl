@@ -27,12 +27,10 @@ import org.osgi.service.cm.ConfigurationListener;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Carlos Sierra Andrés
@@ -40,7 +38,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ConfigurationsOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 
 	public ConfigurationsOSGiImpl(String factoryPid) {
-		super((bundleContext, op) -> {
+		super((executionContext, op) -> {
 			ConcurrentHashMap<String, Configuration> configurations =
 				new ConcurrentHashMap<>();
 
@@ -50,6 +48,8 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 			AtomicBoolean closed = new AtomicBoolean();
 
 			CountDownLatch countDownLatch = new CountDownLatch(1);
+
+			final BundleContext bundleContext = executionContext.getBundleContext();
 
 			ServiceRegistration<?> serviceRegistration =
 				bundleContext.registerService(
@@ -126,7 +126,7 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 
 			if (serviceReference != null) {
 				Configuration[] configuration = getConfigurations(
-                    bundleContext, factoryPid, serviceReference);
+					bundleContext, factoryPid, serviceReference);
 
 				for (Configuration c : configuration) {
 					configurations.put(c.getPid(), c);
