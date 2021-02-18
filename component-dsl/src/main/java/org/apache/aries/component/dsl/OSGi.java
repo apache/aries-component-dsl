@@ -485,108 +485,13 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		));
 	}
 
-	default  <S> OSGi<S> applyTo(OSGi<Function<T, S>> fun) {
-		return fromOsgiRunnable((executionContext, op) -> {
-			ConcurrentDoublyLinkedList<T> identities = new ConcurrentDoublyLinkedList<>();
-			ConcurrentDoublyLinkedList<Function<T,S>> functions = new ConcurrentDoublyLinkedList<>();
-			IdentityHashMap<T, IdentityHashMap<Function<T, S>, Runnable>>
-				terminators = new IdentityHashMap<>();
+	<S> OSGi<S> applyTo(OSGi<Function<T, S>> fun);
 
-			OSGiResult funRun = fun.run(
-				executionContext,
-				f -> {
-					synchronized(identities) {
-						ConcurrentDoublyLinkedList.Node node = functions.addLast(f);
-
-						for (T t : identities) {
-							IdentityHashMap<Function<T, S>, Runnable> terminatorMap =
-								terminators.computeIfAbsent(
-									t, __ -> new IdentityHashMap<>());
-							terminatorMap.put(f, op.apply(f.apply(t)));
-						}
-
-						return () -> {
-							synchronized (identities) {
-								node.remove();
-
-								identities.forEach(t -> {
-									Runnable terminator = terminators.get(t).remove(f);
-
-									terminator.run();
-								});
-							}
-						};
-					}
-				}
-			);
-
-			OSGiResult myRun = run(
-				executionContext,
-				t -> {
-					synchronized (identities) {
-						ConcurrentDoublyLinkedList.Node node = identities.addLast(t);
-
-						for (Function<T, S> f : functions) {
-							IdentityHashMap<Function<T, S>, Runnable> terminatorMap =
-								terminators.computeIfAbsent(
-									t, __ -> new IdentityHashMap<>());
-							terminatorMap.put(f, op.apply(f.apply(t)));
-						}
-
-						return () -> {
-							synchronized (identities) {
-								node.remove();
-
-								functions.forEach(f -> {
-									Runnable terminator = terminators.get(t).remove(f);
-
-									terminator.run();
-								});
-							}
-						};
-					}
-				}
-			);
-
-			return () -> {
-				myRun.close();
-
-				funRun.close();
-			};
-		});
-	}
-
-	default <S> OSGi<S> choose(
+	<S> OSGi<S> choose(
 		Function<T, OSGi<Boolean>> chooser, Function<OSGi<T>, OSGi<S>> then,
-		Function<OSGi<T>, OSGi<S>> otherwise) {
+		Function<OSGi<T>, OSGi<S>> otherwise);
 
-		return fromOsgiRunnable((executionContext, publisher) -> {
-			Pad<T, S> thenPad = new Pad<>(executionContext, then, publisher);
-			Pad<T, S> elsePad = new Pad<>(executionContext, otherwise, publisher);
-
-			OSGiResult result = run(
-				executionContext,
-				t -> chooser.apply(t).run(
-                    executionContext,
-                    b -> {
-                        if (b) {
-                            return thenPad.publish(t);
-                        } else {
-                            return elsePad.publish(t);
-                        }
-                    }
-                ));
-			return () -> {
-				thenPad.close();
-				elsePad.close();
-				result.close();
-			};
-		});
-	}
-
-	default <S> OSGi<S> distribute(Function<OSGi<T>, OSGi<S>> ... funs) {
-		return new DistributeOSGiImpl<>(this, funs);
-	}
+	<S> OSGi<S> distribute(Function<OSGi<T>, OSGi<S>> ... funs);
 
 	default OSGi<T> effects(
 		Consumer<? super T> onAdded, Consumer<? super T> onRemoved) {
@@ -594,93 +499,18 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		return effects(onAdded, __ -> {}, __ -> {}, onRemoved);
 	}
 
-	default OSGi<T> effects(
+	OSGi<T> effects(
 		Consumer<? super T> onAddedBefore, Consumer<? super T> onAddedAfter,
 		Consumer<? super T> onRemovedBefore,
-		Consumer<? super T> onRemovedAfter) {
-
-		return fromOsgiRunnable((executionContext, op) ->
-			run(
-				executionContext,
-				t -> {
-					onAddedBefore.accept(t);
-
-					try {
-						Runnable terminator = op.publish(t);
-
-						OSGiResult result = () -> {
-							try {
-								onRemovedBefore.accept(t);
-							}
-							catch (Exception e) {
-								//TODO: logging
-							}
-
-							try {
-								terminator.run();
-							}
-							catch (Exception e) {
-								//TODO: logging
-							}
-
-							try {
-								onRemovedAfter.accept(t);
-							}
-							catch (Exception e) {
-								//TODO: logging
-							}
-						};
-
-						try {
-							onAddedAfter.accept(t);
-						}
-						catch (Exception e) {
-							result.run();
-
-							throw e;
-						}
-
-						return result;
-					}
-					catch (Exception e) {
-						try {
-							onRemovedAfter.accept(t);
-						}
-						catch (Exception e1) {
-							//TODO: logging
-						}
-
-						throw e;
-					}
-				}
-			)
-		);
-	}
+		Consumer<? super T> onRemovedAfter);
 
 	default OSGi<T> effects(Effect<? super T> effect) {
 		return effects(effect.getOnIncoming(), effect.getOnLeaving());
 	}
 
-	default OSGi<T> filter(Predicate<T> predicate) {
-		return fromOsgiRunnable((executionContext, op) ->
-			run(
-				executionContext,
-				t -> {
-					if (predicate.test(t)) {
-						return op.apply(t);
-					}
-					else {
-						return NOOP;
-					}
-				}
-			));
-	}
+	OSGi<T> filter(Predicate<T> predicate);
 
-	default <S> OSGi<S> flatMap(Function<? super T, OSGi<? extends S>> fun) {
-		return fromOsgiRunnable((executionContext, op) ->
-			run(executionContext, t -> fun.apply(t).run(executionContext, op))
-		);
-	}
+	<S> OSGi<S> flatMap(Function<? super T, OSGi<? extends S>> fun);
 
 	default OSGi<Void> foreach(Consumer<? super T> onAdded) {
 		return foreach(onAdded, __ -> {});
@@ -692,76 +522,19 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		return ignore(effects(onAdded, onRemoved));
 	}
 
-	default <S> OSGi<S> map(Function<? super T, ? extends S> function) {
-		return fromOsgiRunnable((executionContext, op) ->
-			run(executionContext, t -> op.apply(function.apply(t)))
-		);
-	}
+	<S> OSGi<S> map(Function<? super T, ? extends S> function);
 
-	default OSGi<T> recover(BiFunction<T, Exception, T> onError) {
-		return fromOsgiRunnable((executionContext, op) ->
-			run(
-				executionContext,
-				t -> {
-					try {
-						return op.apply(t);
-					}
-					catch (Exception e) {
-						return op.apply(onError.apply(t, e));
-					}
-				}
-			));
-	}
+	OSGi<T> recover(BiFunction<T, Exception, T> onError);
 
-	default OSGi<T> recoverWith(BiFunction<T, Exception, OSGi<T>> onError) {
-		return fromOsgiRunnable((executionContext, op) ->
-			run(
-				executionContext,
-				t -> {
-					try {
-						return op.apply(t);
-					}
-					catch (Exception e) {
-						return onError.apply(t, e).run(executionContext, op);
-					}
-				}
-			));
-	}
+	OSGi<T> recoverWith(BiFunction<T, Exception, OSGi<T>> onError);
 
-	default <K, S> OSGi<S> splitBy(
-		Function<T, OSGi<K>> mapper, BiFunction<K, OSGi<T>, OSGi<S>> fun) {
-
-		return fromOsgiRunnable((executionContext, op) -> {
-			HashMap<K, Pad<T, S>> pads = new HashMap<>();
-
-			OSGiResult result = run(
-				executionContext,
-				t -> mapper.apply(t).run(
-					executionContext,
-					k -> pads.computeIfAbsent(
-						k,
-						__ -> new Pad<>(
-							executionContext,
-							___ -> fun.apply(k, ___), op)
-					).publish(t)
-				)
-			);
-
-			return () -> {
-				pads.values().forEach(Pad::close);
-
-				result.close();
-			};
-		});
-	}
+	<K, S> OSGi<S> splitBy(
+		Function<T, OSGi<K>> mapper, BiFunction<K, OSGi<T>, OSGi<S>> fun);
 
 	default public <S> OSGi<S> then(OSGi<S> next) {
 		return flatMap(__ -> next);
 	}
 
-	default <S> OSGi<S> transform(Transformer<T, S> fun) {
-		return fromOsgiRunnable(
-			(executionContext, op) -> run(executionContext, fun.transform(op)));
-	}
+	<S> OSGi<S> transform(Transformer<T, S> fun);
 
 }

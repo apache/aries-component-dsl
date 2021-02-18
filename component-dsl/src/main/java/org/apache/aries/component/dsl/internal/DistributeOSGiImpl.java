@@ -30,7 +30,7 @@ public class DistributeOSGiImpl<T, S> extends OSGiImpl<S> {
 
     @SafeVarargs
     public DistributeOSGiImpl(
-        OSGiRunnable<T> operation, Function<OSGi<T>, OSGi<S>>... funs) {
+        OSGiImpl<T> operation, Function<OSGi<T>, OSGi<S>>... funs) {
 
         super((executionContext, publisher) -> {
             Pad<T, S>[] pads = new Pad[funs.length];
