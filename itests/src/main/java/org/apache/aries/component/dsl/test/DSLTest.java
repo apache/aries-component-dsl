@@ -1354,10 +1354,20 @@ public class DSLTest {
         ArrayList<Object> arrived = new ArrayList<>();
         ArrayList<Object> left = new ArrayList<>();
 
+        ArrayList<ProbeImpl<Integer>> probes = new ArrayList<>();
+
         OSGi<Integer> program = just(
             Arrays.asList(1, 2, 3, 4, 5, 6)
         ).recoverWith(
             (__, e) -> just(0)
+        ).flatMap(
+            t -> {
+                ProbeImpl<Integer> probe = new ProbeImpl<>();
+
+                probes.add(probe);
+
+                return probe.then(just(t));
+            }
         ).effects(
             arrived::add, left::add
         ).effects(
@@ -1374,6 +1384,10 @@ public class DSLTest {
 
             return NOOP;
         })) {
+            for (ProbeImpl<Integer> probe : probes) {
+                probe.getPublisher().publish(0);
+            }
+
             assertEquals(Arrays.asList(0, 2, 0, 4, 0, 6), result);
             assertEquals(Arrays.asList(1, 0, 2, 3, 0, 4, 5, 0, 6), arrived);
             assertEquals(Arrays.asList(1, 3, 5), left);
