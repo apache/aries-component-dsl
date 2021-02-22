@@ -29,14 +29,7 @@ import org.apache.aries.component.dsl.function.Function4;
 import org.apache.aries.component.dsl.function.Function6;
 import org.apache.aries.component.dsl.function.Function8;
 import org.apache.aries.component.dsl.function.Function9;
-import org.apache.aries.component.dsl.internal.CoalesceOSGiImpl;
-import org.apache.aries.component.dsl.internal.ConfigurationOSGiImpl;
-import org.apache.aries.component.dsl.internal.DistributeOSGiImpl;
-import org.apache.aries.component.dsl.internal.EffectsOSGi;
-import org.apache.aries.component.dsl.internal.NothingOSGiImpl;
-import org.apache.aries.component.dsl.internal.Pad;
-import org.apache.aries.component.dsl.internal.ServiceReferenceOSGi;
-import org.apache.aries.component.dsl.internal.ServiceRegistrationOSGiImpl;
+import org.apache.aries.component.dsl.internal.*;
 import org.apache.aries.component.dsl.function.Function11;
 import org.apache.aries.component.dsl.function.Function12;
 import org.apache.aries.component.dsl.function.Function13;
@@ -51,16 +44,6 @@ import org.apache.aries.component.dsl.function.Function26;
 import org.apache.aries.component.dsl.function.Function3;
 import org.apache.aries.component.dsl.function.Function5;
 import org.apache.aries.component.dsl.function.Function7;
-import org.apache.aries.component.dsl.internal.BundleContextOSGiImpl;
-import org.apache.aries.component.dsl.internal.BundleOSGi;
-import org.apache.aries.component.dsl.internal.ChangeContextOSGiImpl;
-import org.apache.aries.component.dsl.internal.ConcurrentDoublyLinkedList;
-import org.apache.aries.component.dsl.internal.ConfigurationsOSGiImpl;
-import org.apache.aries.component.dsl.internal.AllOSGi;
-import org.apache.aries.component.dsl.internal.IgnoreImpl;
-import org.apache.aries.component.dsl.internal.JustOSGiImpl;
-import org.apache.aries.component.dsl.internal.OSGiImpl;
-import org.apache.aries.component.dsl.internal.UpdateSupport;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
@@ -346,6 +329,14 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		return serviceReference.flatMap(OSGi::prototypes);
 	}
 
+	static <T> OSGi<T> recover(OSGi<T> program, BiFunction<T, Exception, T> function) {
+		return new RecoverOSGi<>(program, function);
+	}
+
+	static <T> OSGi<T> recoverWith(OSGi<T> program, BiFunction<T, Exception, OSGi<T>> function) {
+		return new RecoverWithOSGi<>(program, function);
+	}
+
 	static <T> OSGi<ServiceRegistration<T>> register(
 		Class<T> clazz, T service, Map<String, Object> properties) {
 
@@ -524,8 +515,16 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 
 	<S> OSGi<S> map(Function<? super T, ? extends S> function);
 
+	@Deprecated
+	/**
+	 * @deprecated in favor of {@link OSGi#recover(OSGi, BiFunction)}
+	 */
 	OSGi<T> recover(BiFunction<T, Exception, T> onError);
 
+	@Deprecated
+	/**
+	 * @deprecated in favor of {@link OSGi#recoverWith(OSGi, BiFunction)}
+	 */
 	OSGi<T> recoverWith(BiFunction<T, Exception, OSGi<T>> onError);
 
 	<K, S> OSGi<S> splitBy(

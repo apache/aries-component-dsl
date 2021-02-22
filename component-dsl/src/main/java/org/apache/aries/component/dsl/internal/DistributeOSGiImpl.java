@@ -16,7 +16,6 @@ package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGi;
 import org.apache.aries.component.dsl.OSGiResult;
-import org.apache.aries.component.dsl.OSGiRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,11 +25,10 @@ import java.util.function.Function;
 /**
  * @author Carlos Sierra Andrés
  */
-public class DistributeOSGiImpl<T, S> extends OSGiImpl<S> {
+public class DistributeOSGiImpl<T, S> extends BaseOSGiImpl<S> {
 
     @SafeVarargs
-    public DistributeOSGiImpl(
-        OSGiImpl<T> operation, Function<OSGi<T>, OSGi<S>>... funs) {
+    public DistributeOSGiImpl(OSGi<T> operation, Function<OSGi<T>, OSGi<S>>... funs) {
 
         super((executionContext, publisher) -> {
             Pad<T, S>[] pads = new Pad[funs.length];
@@ -41,7 +39,7 @@ public class DistributeOSGiImpl<T, S> extends OSGiImpl<S> {
 
             OSGiResult result = operation.run(
                 executionContext,
-                t -> {
+                wrap(publisher, t -> {
                     List<Runnable> terminators = new ArrayList<>(funs.length);
 
                     int i = 0;
@@ -58,7 +56,7 @@ public class DistributeOSGiImpl<T, S> extends OSGiImpl<S> {
                     }
 
                     return () -> cleanUp(terminators);
-                });
+                }));
 
             return () -> {
                 result.close();

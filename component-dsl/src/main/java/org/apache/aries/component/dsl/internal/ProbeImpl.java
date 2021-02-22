@@ -20,12 +20,11 @@ package org.apache.aries.component.dsl.internal;
 import org.apache.aries.component.dsl.OSGiResult;
 import org.apache.aries.component.dsl.OSGiRunnable;
 import org.apache.aries.component.dsl.Publisher;
-import org.osgi.framework.BundleContext;
 
 /**
  * @author Carlos Sierra Andrés
  */
-public class ProbeImpl<T> extends OSGiImpl<T> {
+public class ProbeImpl<T> extends BaseOSGiImpl<T> {
 
     public ProbeImpl() {
         super(new ProbeOperationImpl<>());

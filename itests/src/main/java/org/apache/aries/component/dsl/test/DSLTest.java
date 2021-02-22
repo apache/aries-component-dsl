@@ -298,17 +298,18 @@ public class DSLTest {
     public void testEffectsErrorOnAddedAfter() {
         ArrayList<Object> effects = new ArrayList<>();
 
-        OSGi<Integer> program = just(Arrays.asList(1, 2, 3, 4)).
-            recoverWith((__, e) -> nothing()).
-            effects(
-            effects::add,
-            i -> {
-                if (i % 2 == 0) {
-                    throw new RuntimeException();
-                }
-            },
-            __ -> {},
-            effects::remove
+        OSGi<Integer> program = recoverWith(
+                just(Arrays.asList(1, 2, 3, 4)).
+                effects(
+                    effects::add,
+                    i -> {
+                        if (i % 2 == 0) {
+                            throw new RuntimeException();
+                        }
+                    },
+                    __ -> {},
+                    effects::remove),
+                (__, e) -> nothing()
         );
 
         try (OSGiResult result = program.run(bundleContext)) {
@@ -1109,7 +1110,7 @@ public class DSLTest {
         );
 
         try (OSGiResult run = program.run(bundleContext)) {
-
+            fail("This should not be reached");
         } catch (Exception e) {
             assertEquals(Collections.emptyList(), results1);
             assertEquals(Collections.emptyList(), results2);
@@ -1117,22 +1118,22 @@ public class DSLTest {
             assertEquals(Collections.emptyList(), results4);
         }
 
-        program = OSGi.just(
-            Arrays.asList(1, 2, 3)
-        ).recoverWith(
-            (i, e) -> nothing()
-        ).distribute(
-            p1 -> p1.effects(results1::add, results1::remove),
-            p2 -> p2.effects(results2::add, results2::remove),
-            p3 -> p3.filter(i -> {
-                    if (i == 2) {
-                        throw new IllegalArgumentException();
-                    }
+        program = recoverWith(
+            just(Arrays.asList(1, 2, 3)).
+                distribute(
+                p1 -> p1.effects(results1::add, results1::remove),
+                p2 -> p2.effects(results2::add, results2::remove),
+                p3 -> p3.filter(i -> {
+                        if (i == 2) {
+                            throw new IllegalArgumentException();
+                        }
 
-                    return true;
-                }
-            ).effects(results3::add, results3::remove),
-            p4 -> p4.effects(results4::add, results4::remove)
+                        return true;
+                    }
+                ).effects(results3::add, results3::remove),
+                p4 -> p4.effects(results4::add, results4::remove)
+            ),
+            (i, e) -> nothing()
         );
 
         try (OSGiResult run = program.run(bundleContext)) {
@@ -1313,7 +1314,7 @@ public class DSLTest {
     }
 
     @Test
-    public void testRecover() {
+    public void testDeprecatedRecover() {
         ArrayList<Object> result = new ArrayList<>();
         ArrayList<Object> arrived = new ArrayList<>();
         ArrayList<Object> left = new ArrayList<>();
@@ -1349,25 +1350,15 @@ public class DSLTest {
     }
 
     @Test
-    public void testRecoverWith() {
+    public void testDeprecatedRecoverWith() {
         ArrayList<Object> result = new ArrayList<>();
         ArrayList<Object> arrived = new ArrayList<>();
         ArrayList<Object> left = new ArrayList<>();
-
-        ArrayList<ProbeImpl<Integer>> probes = new ArrayList<>();
 
         OSGi<Integer> program = just(
             Arrays.asList(1, 2, 3, 4, 5, 6)
         ).recoverWith(
             (__, e) -> just(0)
-        ).flatMap(
-            t -> {
-                ProbeImpl<Integer> probe = new ProbeImpl<>();
-
-                probes.add(probe);
-
-                return probe.then(just(t));
-            }
         ).effects(
             arrived::add, left::add
         ).effects(
@@ -1384,10 +1375,6 @@ public class DSLTest {
 
             return NOOP;
         })) {
-            for (ProbeImpl<Integer> probe : probes) {
-                probe.getPublisher().publish(0);
-            }
-
             assertEquals(Arrays.asList(0, 2, 0, 4, 0, 6), result);
             assertEquals(Arrays.asList(1, 0, 2, 3, 0, 4, 5, 0, 6), arrived);
             assertEquals(Arrays.asList(1, 3, 5), left);
@@ -1396,6 +1383,59 @@ public class DSLTest {
             assertEquals(arrived, result);
         }
     }
+
+    @Test
+    public void testRecoverWith() {
+        ArrayList<Object> result = new ArrayList<>();
+        ArrayList<Object> arrived = new ArrayList<>();
+        ArrayList<Object> left = new ArrayList<>();
+
+        ArrayList<ProbeImpl<Integer>> probes = new ArrayList<>();
+
+        OSGi<Integer> program =
+            recoverWith(
+                just(Arrays.asList(1, 2, 3, 4, 5, 6)).
+                    flatMap(t -> {
+                        ProbeImpl<Integer> probe = new ProbeImpl<>();
+
+                        probes.add(probe);
+
+                        return probe.then(just(t));
+                    }).effects(
+                    arrived::add, left::add
+                ).effects(
+                    t -> {
+                        if (t % 2 != 0) {
+                            throw new RuntimeException();
+                        }
+                    }
+                    , __ -> {}
+                ),
+                (__, e) -> just(0)
+            );
+
+        try (OSGiResult run = program.run(bundleContext, e -> {
+            result.add(e);
+
+            return NOOP;
+        })) {
+            for (ProbeImpl<Integer> probe : probes) {
+                Publisher<? super Integer> publisher = probe.getPublisher();
+                publisher.publish(0);
+            }
+
+            assertEquals(Arrays.asList(0, 2, 0, 4, 0, 6), result);
+            assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), arrived);
+            assertEquals(Arrays.asList(1, 3, 5), left);
+
+            arrived.replaceAll(t -> {
+                if (left.contains(t)) return 0;
+                else return t;
+            });
+            assertEquals(arrived, result);
+        }
+    }
+
 
     @Test
     public void testRegister() {

@@ -15,23 +15,10 @@
  * limitations under the License.
  */
 
-package org.apache.aries.component.dsl;
+package org.apache.aries.component.dsl.internal;
 
-import java.util.function.Function;
-
-/**
- * @author Carlos Sierra Andrés
- */
-public interface Publisher<T> extends Function<T, Runnable> {
-
-    default OSGiResult apply(T t) {
-        return publish(t);
+public class PublisherRethrowException extends Error {
+    public PublisherRethrowException(Throwable cause) {
+        super(cause);
     }
-
-    OSGiResult publish(T t);
-
-    default <E extends Exception> OSGiResult error(T t, Exception e) throws E {
-        throw (E)e;
-    }
-
 }
