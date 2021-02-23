@@ -1472,6 +1472,47 @@ public class DSLTest {
     }
 
     @Test
+    public void testNestedRecoverWithAndRethrow() {
+        ArrayList<Integer> result = new ArrayList<>();
+
+        class A extends RuntimeException {}
+        class B extends RuntimeException {}
+
+        OSGi<Integer> program = recoverWith(
+            recoverWith(
+                just(Arrays.asList(1, 2, 3, 4, 5, 6)).
+                effects(
+                    t -> {
+                        if (t % 5 == 0) {
+                            throw new A();
+                        }
+                    }
+                    , __ -> { }
+                ).
+                effects(
+                    t -> {
+                        if (t % 2 == 0) {
+                            throw new B();
+                        }
+                    },
+                    __ -> { }
+                ),
+                (t, e) -> {
+                    if (e instanceof A) return just(7);
+                    else throw (RuntimeException)e;
+                }),
+            (t, e) -> just(8));
+
+        try (OSGiResult run = program.run(bundleContext, e -> {
+            result.add(e);
+
+            return NOOP;
+        })) {
+            assertEquals(Arrays.asList(1, 8, 3, 8, 7, 8), result);
+        }
+    }
+
+    @Test
     public void testRegister() {
         assertNull(bundleContext.getServiceReference(Service.class));
 

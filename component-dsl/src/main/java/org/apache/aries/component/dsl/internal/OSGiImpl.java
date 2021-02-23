@@ -50,7 +50,7 @@ public class OSGiImpl<T> extends BaseOSGiImpl<T> {
 			ExecutionContext ec, Publisher<? super T> op) {
 
 			return operation.run(ec,
-				t -> {
+				wrap(op, t -> {
 					try {
 						return op.publish(t);
 					} catch (PublisherRethrowException pre) {
@@ -60,7 +60,7 @@ public class OSGiImpl<T> extends BaseOSGiImpl<T> {
 					} catch (Exception e) {
 						return op.error(t, e);
 					}
-				});
+				}));
 		}
 	}
 }

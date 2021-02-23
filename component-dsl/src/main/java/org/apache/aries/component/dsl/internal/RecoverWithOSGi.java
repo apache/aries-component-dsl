@@ -59,7 +59,11 @@ public class RecoverWithOSGi<T> extends OSGiImpl<T> {
 
         @Override
         public <E extends Exception> OSGiResult error(T t, Exception e) throws E {
-            return error.apply(t, e).run(executionContext, op);
+            try {
+                return error.apply(t, e).run(executionContext, op);
+            } catch (Exception exception) {
+                return op.error(t, e);
+            }
         }
     }
 }
