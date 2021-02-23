@@ -16,6 +16,7 @@ package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGi;
 import org.apache.aries.component.dsl.OSGiResult;
+import org.apache.aries.component.dsl.Publisher;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,7 @@ public class DistributeOSGiImpl<T, S> extends BaseOSGiImpl<S> {
 
             OSGiResult result = operation.run(
                 executionContext,
-                wrap(publisher, t -> {
+                publisher.pipe(t -> {
                     List<Runnable> terminators = new ArrayList<>(funs.length);
 
                     int i = 0;

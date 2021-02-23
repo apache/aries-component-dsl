@@ -34,4 +34,20 @@ public interface Publisher<T> extends Function<T, Runnable> {
         throw (E)e;
     }
 
+    default <S> Publisher<S> pipe(Function<? super S, OSGiResult> next) {
+
+        return new Publisher<S>() {
+            @Override
+            public OSGiResult publish(S t) {
+                return next.apply(t);
+            }
+
+            @Override
+            public <E extends Exception> OSGiResult error(S s, Exception e) throws E {
+                return Publisher.this.error((T)s, e);
+            }
+        };
+
+    }
+
 }

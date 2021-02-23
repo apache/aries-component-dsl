@@ -50,7 +50,7 @@ public class OSGiImpl<T> extends BaseOSGiImpl<T> {
 			ExecutionContext ec, Publisher<? super T> op) {
 
 			return operation.run(ec,
-				wrap(op, t -> {
+				op.pipe(t -> {
 					try {
 						return op.publish(t);
 					} catch (PublisherRethrowException pre) {
