@@ -1437,6 +1437,42 @@ public class DSLTest {
     }
 
     @Test
+    public void testNestedRecover() {
+        ArrayList<Integer> result = new ArrayList<>();
+
+        OSGi<Integer> program = recover(
+            recover(
+                just(Arrays.asList(1, 2, 3, 4, 5, 6)).
+                    effects(
+                        t -> {
+                            if (t % 5 == 0) {
+                                throw new IllegalArgumentException();
+                            }
+                        }
+                        , __ -> {
+                        }
+                    ),
+                (t, e) -> 2).
+                effects(t -> {
+                        if (t % 2 == 0) {
+                            throw new IllegalArgumentException();
+                        }
+                    }
+                    , __ -> {
+                    }),
+            (t, e) -> 8);
+
+        try (OSGiResult run = program.run(bundleContext, e -> {
+            result.add(e);
+
+            return NOOP;
+        })) {
+            assertEquals(Arrays.asList(1, 8, 3, 8, 8, 8), result);
+        }
+    }
+
+
+    @Test
     public void testNestedRecoverWith() {
         ArrayList<Integer> result = new ArrayList<>();
 
@@ -1470,6 +1506,48 @@ public class DSLTest {
             assertEquals(Arrays.asList(1, 8, 3, 8, 8, 8), result);
         }
     }
+
+    @Test
+    public void testNestedRecoverAndRethrow() {
+        ArrayList<Integer> result = new ArrayList<>();
+
+        class A extends RuntimeException {}
+        class B extends RuntimeException {}
+
+        OSGi<Integer> program = recover(
+            recover(
+                just(Arrays.asList(1, 2, 3, 4, 5, 6)).
+                    effects(
+                        t -> {
+                            if (t % 5 == 0) {
+                                throw new A();
+                            }
+                        }
+                        , __ -> { }
+                    ).
+                    effects(
+                        t -> {
+                            if (t % 2 == 0) {
+                                throw new B();
+                            }
+                        },
+                        __ -> { }
+                    ),
+                (t, e) -> {
+                    if (e instanceof A) return 7;
+                    else throw (RuntimeException)e;
+                }),
+            (t, e) -> 8);
+
+        try (OSGiResult run = program.run(bundleContext, e -> {
+            result.add(e);
+
+            return NOOP;
+        })) {
+            assertEquals(Arrays.asList(1, 8, 3, 8, 7, 8), result);
+        }
+    }
+
 
     @Test
     public void testNestedRecoverWithAndRethrow() {
