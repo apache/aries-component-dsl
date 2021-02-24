@@ -34,7 +34,7 @@ public class HighestRankingOSGi<T> extends OSGiImpl<T> {
         OSGi<T> previous, Comparator<? super T> comparator,
         Function<OSGi<T>, OSGi<T>> notHighest) {
 
-        super((executionContext, highestPipe) -> {
+        super((executionContext, publisher) -> {
             Comparator<Tuple<T>> comparing = Comparator.comparing(
                 Tuple::getT, comparator);
             PriorityQueue<Tuple<T>> set = new PriorityQueue<>(
@@ -42,11 +42,11 @@ public class HighestRankingOSGi<T> extends OSGiImpl<T> {
             AtomicReference<Tuple<T>> sent = new AtomicReference<>();
 
             Pad<T, T> notHighestPad = new Pad<>(
-                executionContext, notHighest, highestPipe);
+                executionContext, notHighest, publisher);
 
             OSGiResult result = previous.run(
                 executionContext,
-                t -> {
+                publisher.pipe(t -> {
                     Tuple<T> tuple = new Tuple<>(t);
 
                     synchronized (set) {
@@ -59,7 +59,7 @@ public class HighestRankingOSGi<T> extends OSGiImpl<T> {
                                 old._runnable.run();
                             }
 
-                            tuple._runnable = highestPipe.apply(t);
+                            tuple._runnable = publisher.apply(t);
 
                             if (old != null) {
                                 old._runnable = notHighestPad.publish(old._t);
@@ -83,7 +83,7 @@ public class HighestRankingOSGi<T> extends OSGiImpl<T> {
 
                             if (current != old && current != null) {
                                 current._runnable.run();
-                                current._runnable = highestPipe.apply(
+                                current._runnable = publisher.apply(
                                     current._t);
                                 sent.set(current);
                             }
@@ -92,7 +92,7 @@ public class HighestRankingOSGi<T> extends OSGiImpl<T> {
                             }
                         }
                     };
-                });
+                }));
 
             return new OSGiResultImpl(
                 () -> {

@@ -43,10 +43,11 @@ public class Pad<T, S> implements Publisher<T>, Closeable {
 
         _result = next.run(bundleContext, continuation);
 
-        _publisher =
+        _publisher = continuation.pipe(
             probe.getPublisher() != null ?
-                probe.getPublisher() :
-                __ -> NOOP;
+                probe.getPublisher()::publish :
+                __ -> NOOP
+        );
     }
 
     @Override
@@ -57,6 +58,11 @@ public class Pad<T, S> implements Publisher<T>, Closeable {
     @Override
     public OSGiResult publish(T t) {
         return _publisher.publish(t);
+    }
+
+    @Override
+    public <E extends Exception> OSGiResult error(T t, Exception e) throws E {
+        return _publisher.error(t, e);
     }
 
     private final OSGiResult _result;
