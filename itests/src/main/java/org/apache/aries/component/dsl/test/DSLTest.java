@@ -264,6 +264,45 @@ public class DSLTest {
     }
 
     @Test
+    public void testFlatCombine() {
+        List<Integer> list = new ArrayList<>();
+
+        ProbeImpl<Integer> probe1 = new ProbeImpl<>();
+        ProbeImpl<Integer> probe2 = new ProbeImpl<>();
+
+        OSGi<Integer> program = flatCombine(
+            (x, y) -> just(x * y), probe1, probe2
+        ).effects(
+            list::add, list::remove
+        );
+
+        OSGiResult run = program.run(bundleContext);
+
+        Publisher<? super Integer> publisher1 = probe1.getPublisher();
+        Publisher<? super Integer> publisher2 = probe2.getPublisher();
+
+        OSGiResult osgiResult1 = publisher1.publish(3);
+        OSGiResult osgiResult2 = publisher2.publish(5);
+
+        assertTrue(list.contains(15));
+
+        osgiResult1.close();
+
+        assertFalse(list.contains(15));
+
+        publisher1.publish(3);
+
+        assertTrue(list.contains(15));
+
+        osgiResult2.close();
+
+        assertFalse(list.contains(15));
+
+        run.close();
+    }
+
+
+    @Test
     public void testEffectsOrder() {
         ArrayList<Object> effects = new ArrayList<>();
 

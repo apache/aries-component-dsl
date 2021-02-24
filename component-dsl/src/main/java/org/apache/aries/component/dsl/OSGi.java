@@ -190,6 +190,106 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		return z.applyTo(combine((A aa, B bb, C cc, D dd, E ee, F ff, G gg, H hh, I ii, J jj, K kk, L ll, M mm, N nn, O oo, P pp, Q qq, R rr, S ss, T tt, U uu, V vv, W ww, X xx, Y yy) -> fun.curried().apply(aa).apply(bb).apply(cc).apply(dd).apply(ee).apply(ff).apply(gg).apply(hh).apply(ii).apply(jj).apply(kk).apply(ll).apply(mm).apply(nn).apply(oo).apply(pp).apply(qq).apply(rr).apply(ss).apply(tt).apply(uu).apply(vv).apply(ww).apply(xx).apply(yy), a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y));
 	}
 
+	static <A, B, RES> OSGi<RES> flatCombine(Function2<A, B, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b) {
+		return combine(fun, a, b).flatMap(Function.identity());
+	}
+
+	static <A, B, C, RES> OSGi<RES> flatCombine(Function3<A, B, C, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c) {
+		return combine(fun, a, b, c).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, RES> OSGi<RES> flatCombine(Function4<A, B, C, D, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d) {
+		return combine(fun, a, b, c, d).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, RES> OSGi<RES> flatCombine(Function5<A, B, C, D, E, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e) {
+		return combine(fun, a, b, c, d, e).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, RES> OSGi<RES> flatCombine(Function6<A, B, C, D, E, F, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f) {
+		return combine(fun, a, b, c, d, e, f).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, RES> OSGi<RES> flatCombine(Function7<A, B, C, D, E, F, G, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g) {
+		return combine(fun, a, b, c, d, e, f, g).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, RES> OSGi<RES> flatCombine(Function8<A, B, C, D, E, F, G, H, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h) {
+		return combine(fun, a, b, c, d, e, f, g, h).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, RES> OSGi<RES> flatCombine(Function9<A, B, C, D, E, F, G, H, I, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i) {
+		return combine(fun, a, b, c, d, e, f, g, h, i).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, RES> OSGi<RES> flatCombine(Function10<A, B, C, D, E, F, G, H, I, J, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, RES> OSGi<RES> flatCombine(Function11<A, B, C, D, E, F, G, H, I, J, K, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, RES> OSGi<RES> flatCombine(Function12<A, B, C, D, E, F, G, H, I, J, K, L, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, RES> OSGi<RES> flatCombine(Function13<A, B, C, D, E, F, G, H, I, J, K, L, M, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, RES> OSGi<RES> flatCombine(Function14<A, B, C, D, E, F, G, H, I, J, K, L, M, N, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, RES> OSGi<RES> flatCombine(Function15<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n, OSGi<O> o) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, RES> OSGi<RES> flatCombine(Function16<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n, OSGi<O> o, OSGi<P> p) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, RES> OSGi<RES> flatCombine(Function17<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n, OSGi<O> o, OSGi<P> p, OSGi<Q> q) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, RES> OSGi<RES> flatCombine(Function18<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n, OSGi<O> o, OSGi<P> p, OSGi<Q> q, OSGi<R> r) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, RES> OSGi<RES> flatCombine(Function19<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n, OSGi<O> o, OSGi<P> p, OSGi<Q> q, OSGi<R> r, OSGi<S> s) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, RES> OSGi<RES> flatCombine(Function20<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n, OSGi<O> o, OSGi<P> p, OSGi<Q> q, OSGi<R> r, OSGi<S> s, OSGi<T> t) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, RES> OSGi<RES> flatCombine(Function21<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n, OSGi<O> o, OSGi<P> p, OSGi<Q> q, OSGi<R> r, OSGi<S> s, OSGi<T> t, OSGi<U> u) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, RES> OSGi<RES> flatCombine(Function22<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n, OSGi<O> o, OSGi<P> p, OSGi<Q> q, OSGi<R> r, OSGi<S> s, OSGi<T> t, OSGi<U> u, OSGi<V> v) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, RES> OSGi<RES> flatCombine(Function23<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n, OSGi<O> o, OSGi<P> p, OSGi<Q> q, OSGi<R> r, OSGi<S> s, OSGi<T> t, OSGi<U> u, OSGi<V> v, OSGi<W> w) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, RES> OSGi<RES> flatCombine(Function24<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n, OSGi<O> o, OSGi<P> p, OSGi<Q> q, OSGi<R> r, OSGi<S> s, OSGi<T> t, OSGi<U> u, OSGi<V> v, OSGi<W> w, OSGi<X> x) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, RES> OSGi<RES> flatCombine(Function25<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n, OSGi<O> o, OSGi<P> p, OSGi<Q> q, OSGi<R> r, OSGi<S> s, OSGi<T> t, OSGi<U> u, OSGi<V> v, OSGi<W> w, OSGi<X> x, OSGi<Y> y) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y).flatMap(Function.identity());
+	}
+
+	static <A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, RES> OSGi<RES> flatCombine(Function26<A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, OSGi<RES>> fun, OSGi<A> a, OSGi<B> b, OSGi<C> c, OSGi<D> d, OSGi<E> e, OSGi<F> f, OSGi<G> g, OSGi<H> h, OSGi<I> i, OSGi<J> j, OSGi<K> k, OSGi<L> l, OSGi<M> m, OSGi<N> n, OSGi<O> o, OSGi<P> p, OSGi<Q> q, OSGi<R> r, OSGi<S> s, OSGi<T> t, OSGi<U> u, OSGi<V> v, OSGi<W> w, OSGi<X> x, OSGi<Y> y, OSGi<Z> z) {
+		return combine(fun, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z).flatMap(Function.identity());
+	}
+	
 	static OSGi<Dictionary<String, ?>> configuration(String pid) {
 		return new ConfigurationOSGiImpl(pid);
 	}
