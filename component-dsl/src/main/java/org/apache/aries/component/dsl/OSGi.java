@@ -45,6 +45,7 @@ import org.apache.aries.component.dsl.function.Function3;
 import org.apache.aries.component.dsl.function.Function5;
 import org.apache.aries.component.dsl.function.Function7;
 import org.apache.aries.component.dsl.update.UpdateQuery;
+import org.apache.aries.component.dsl.update.UpdateTuple;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
@@ -524,40 +525,40 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	static <T> OSGi<CachingServiceReference<T>> serviceReferences(
 		Class<T> clazz) {
 
-		return new ServiceReferenceOSGi<>(null, clazz);
+		return new ServiceReferenceOSGi<>(null, clazz).map(UpdateTuple::getT);
 	}
 
 	static OSGi<CachingServiceReference<Object>> serviceReferences(
 		String filterString) {
 
-		return new ServiceReferenceOSGi<>(filterString, null);
+		return new ServiceReferenceOSGi<>(filterString, null).map(UpdateTuple::getT);
 	}
 
 	static <T> OSGi<CachingServiceReference<T>> serviceReferences(
 		Class<T> clazz, String filterString) {
 
-		return new ServiceReferenceOSGi<>(filterString, clazz);
+		return new ServiceReferenceOSGi<>(filterString, clazz).map(UpdateTuple::getT);
 	}
 
 	static <T> OSGi<CachingServiceReference<T>> serviceReferences(
 		Class<T> clazz, String filterString,
 		Refresher<? super CachingServiceReference<T>> onModified) {
 
-		return new ServiceReferenceOSGi<>(filterString, clazz, onModified);
+		return new ServiceReferenceOSGi<>(filterString, clazz, onModified).map(UpdateTuple::getT);
 	}
 
 	static <T> OSGi<CachingServiceReference<T>> serviceReferences(
 		Class<T> clazz,
 		Refresher<? super CachingServiceReference<T>> onModified) {
 
-		return new ServiceReferenceOSGi<>(null, clazz, onModified);
+		return new ServiceReferenceOSGi<>(null, clazz, onModified).map(UpdateTuple::getT);
 	}
 
 	static OSGi<CachingServiceReference<Object>> serviceReferences(
 		String filterString,
 		Refresher<? super CachingServiceReference<Object>> onModified) {
 
-		return new ServiceReferenceOSGi<>(filterString, null, onModified);
+		return new ServiceReferenceOSGi<>(filterString, null, onModified).map(UpdateTuple::getT);
 	}
 
 	static <T> OSGi<T> services(Class<T> clazz) {

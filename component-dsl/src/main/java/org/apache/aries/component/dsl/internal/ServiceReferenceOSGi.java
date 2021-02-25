@@ -21,6 +21,8 @@ import org.apache.aries.component.dsl.OSGiResult;
 import org.apache.aries.component.dsl.Refresher;
 import org.apache.aries.component.dsl.CachingServiceReference;
 import org.apache.aries.component.dsl.Publisher;
+import org.apache.aries.component.dsl.update.UpdateSelector;
+import org.apache.aries.component.dsl.update.UpdateTuple;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
@@ -29,7 +31,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  * @author Carlos Sierra Andrés
  */
 public class ServiceReferenceOSGi<T>
-	extends OSGiImpl<CachingServiceReference<T>> {
+	extends OSGiImpl<UpdateTuple<CachingServiceReference<T>>> implements UpdateSelector {
 
 	public ServiceReferenceOSGi(
 		String filterString, Class<T> clazz) {
@@ -59,10 +61,10 @@ public class ServiceReferenceOSGi<T>
 	}
 
 	private static class DefaultServiceTrackerCustomizer<T>
-		implements ServiceTrackerCustomizer<T, Tracked<T>> {
+		implements ServiceTrackerCustomizer<T, Tracked<T>>, UpdateSelector{
 
 		public DefaultServiceTrackerCustomizer(
-			Publisher<? super CachingServiceReference<T>> addedSource,
+			Publisher<? super UpdateTuple<CachingServiceReference<T>>> addedSource,
 			Refresher<? super CachingServiceReference<T>> refresher) {
 
 			_addedSource = addedSource;
@@ -76,7 +78,7 @@ public class ServiceReferenceOSGi<T>
 
 			return new Tracked<>(
 				cachingServiceReference,
-				_addedSource.apply(cachingServiceReference));
+				_addedSource.apply(new UpdateTuple<>(this, cachingServiceReference)));
 		}
 
 		@Override
@@ -89,8 +91,11 @@ public class ServiceReferenceOSGi<T>
 					tracked.cachingServiceReference = new CachingServiceReference<>(
 						reference);
 					tracked.runnable =
-						_addedSource.apply(tracked.cachingServiceReference);
+						_addedSource.apply(new UpdateTuple<>(this, tracked.cachingServiceReference));
 				});
+			}
+			else {
+				tracked.runnable.update(this);
 			}
 		}
 
@@ -101,7 +106,7 @@ public class ServiceReferenceOSGi<T>
 			tracked.runnable.run();
 		}
 
-		private final Publisher<? super CachingServiceReference<T>> _addedSource;
+		private final Publisher<? super UpdateTuple<CachingServiceReference<T>>> _addedSource;
 		private Refresher<? super CachingServiceReference<T>> _refresher;
 
 	}
