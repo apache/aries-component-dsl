@@ -18,6 +18,8 @@
 package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
+import org.apache.aries.component.dsl.update.UpdateQuery;
+import org.apache.aries.component.dsl.update.UpdateSelector;
 
 /**
  * @author Carlos Sierra Andrés
@@ -26,36 +28,49 @@ public class EffectsOSGi extends OSGiImpl<Void> {
 
     public EffectsOSGi(
         Runnable onAddingBefore, Runnable onAddingAfter,
-        Runnable onRemovingBefore, Runnable onRemovingAfter) {
+        Runnable onRemovingBefore, Runnable onRemovingAfter, UpdateQuery<Void> updateQuery) {
 
         super((executionContext, op) -> {
             onAddingBefore.run();
 
             try {
-                Runnable terminator = op.publish(null);
+                OSGiResult terminator = op.publish(null);
 
-                OSGiResult result = () -> {
-                    try {
-                        onRemovingBefore.run();
-                    }
-                    catch (Exception e) {
-                        //TODO: logging
-                    }
+                OSGiResult result = new OSGiResultImpl(
+                    () -> {
+                        try {
+                            onRemovingBefore.run();
+                        }
+                        catch (Exception e) {
+                            //TODO: logging
+                        }
 
-                    try {
-                        terminator.run();
-                    }
-                    catch (Exception e) {
-                        //TODO: logging
-                    }
+                        try {
+                            terminator.run();
+                        }
+                        catch (Exception e) {
+                            //TODO: logging
+                        }
 
-                    try {
-                        onRemovingAfter.run();
+                        try {
+                            onRemovingAfter.run();
+                        }
+                        catch (Exception e) {
+                            //TODO: logging
+                        }
+                    },
+                    us -> {
+                        UpdateQuery.From<Void>[] froms = updateQuery.froms;
+
+                        for (UpdateQuery.From<Void> from : froms) {
+                            if (from.selector == us || from.selector == UpdateSelector.ALL) {
+                                from.consumer.accept(null);
+                            }
+                        }
+
+                        terminator.update(us);
                     }
-                    catch (Exception e) {
-                        //TODO: logging
-                    }
-                };
+                );
 
                 try {
                     onAddingAfter.run();
@@ -66,7 +81,7 @@ public class EffectsOSGi extends OSGiImpl<Void> {
                     throw e;
                 }
 
-                return new OSGiResultImpl(result);
+                return result;
             }
             catch (Exception e) {
                 try {

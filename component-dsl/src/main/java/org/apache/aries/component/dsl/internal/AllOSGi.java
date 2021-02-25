@@ -45,7 +45,8 @@ public class AllOSGi<T> extends OSGiImpl<T> {
             }
 
             return new OSGiResultImpl(
-                () -> cleanUp(results)
+                () -> cleanUp(results),
+                us -> results.forEach(result -> result.update(us))
             );
         });
     }

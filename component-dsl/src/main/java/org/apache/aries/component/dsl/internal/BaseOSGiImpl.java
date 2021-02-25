@@ -18,6 +18,8 @@
 package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.*;
+import org.apache.aries.component.dsl.update.UpdateQuery;
+import org.apache.aries.component.dsl.update.UpdateSelector;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 
@@ -104,7 +106,7 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 		return new BaseOSGiImpl<>((executionContext, op) -> {
 			ConcurrentDoublyLinkedList<T> identities = new ConcurrentDoublyLinkedList<>();
 			ConcurrentDoublyLinkedList<Function<T,S>> functions = new ConcurrentDoublyLinkedList<>();
-			IdentityHashMap<T, IdentityHashMap<Function<T, S>, Runnable>>
+			IdentityHashMap<T, IdentityHashMap<Function<T, S>, OSGiResult>>
 				terminators = new IdentityHashMap<>();
 
 			OSGiResult funRun = fun.run(
@@ -114,23 +116,35 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 						ConcurrentDoublyLinkedList.Node node = functions.addLast(f);
 
 						for (T t : identities) {
-							IdentityHashMap<Function<T, S>, Runnable> terminatorMap =
+							IdentityHashMap<Function<T, S>, OSGiResult> terminatorMap =
 								terminators.computeIfAbsent(
 									t, __ -> new IdentityHashMap<>());
 							terminatorMap.put(f, op.apply(f.apply(t)));
 						}
 
-						return () -> {
-							synchronized (identities) {
-								node.remove();
+						return new OSGiResultImpl(
+							() -> {
+								synchronized (identities) {
+									node.remove();
 
-								identities.forEach(t -> {
-									Runnable terminator = terminators.get(t).remove(f);
+									identities.forEach(t -> {
+										Runnable terminator = terminators.get(t).remove(f);
 
-									terminator.run();
-								});
+										terminator.run();
+									});
+								}
+							},
+							us -> {
+								synchronized (identities) {
+
+									identities.forEach(t -> {
+										OSGiResult terminator = terminators.get(t).get(f);
+
+										terminator.update(us);
+									});
+								}
 							}
-						};
+						);
 					}
 				}
 			));
@@ -142,32 +156,39 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 						ConcurrentDoublyLinkedList.Node node = identities.addLast(t);
 
 						for (Function<T, S> f : functions) {
-							IdentityHashMap<Function<T, S>, Runnable> terminatorMap =
+							IdentityHashMap<Function<T, S>, OSGiResult> terminatorMap =
 								terminators.computeIfAbsent(
 									t, __ -> new IdentityHashMap<>());
 							terminatorMap.put(f, op.apply(f.apply(t)));
 						}
 
-						return () -> {
-							synchronized (identities) {
-								node.remove();
+						return new OSGiResultImpl(
+							() -> {
+								synchronized (identities) {
+									node.remove();
 
-								functions.forEach(f -> {
-									Runnable terminator = terminators.get(t).remove(f);
+									functions.forEach(f -> {
+										Runnable terminator = terminators.get(t).remove(f);
 
-									terminator.run();
-								});
+										terminator.run();
+									});
+								}
+							},
+							us -> {
+								synchronized (identities) {
+									functions.forEach(f -> {
+										OSGiResult terminator = terminators.get(t).get(f);
+
+										terminator.update(us);
+									});
+								}
 							}
-						};
+						);
 					}
 				})
 			);
 
-			return () -> {
-				myRun.close();
-
-				funRun.close();
-			};
+			return new AggregateOSGiResult(myRun, funRun);
 		});
 	}
 
@@ -192,11 +213,7 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
                         }
                     }
                 )));
-			return () -> {
-				thenPad.close();
-				elsePad.close();
-				result.close();
-			};
+			return new AggregateOSGiResult(thenPad, elsePad, result);
 		});
 	}
 
@@ -211,6 +228,15 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 		Consumer<? super T> onRemovedBefore,
 		Consumer<? super T> onRemovedAfter) {
 
+		return effects(onAddedBefore, onAddedAfter, onRemovedBefore, onRemovedAfter, UpdateQuery.onUpdate());
+	}
+
+	public OSGi<T> effects(
+		Consumer<? super T> onAddedBefore, Consumer<? super T> onAddedAfter,
+		Consumer<? super T> onRemovedBefore,
+		Consumer<? super T> onRemovedAfter,
+		UpdateQuery<T> updateQuery) {
+
 		//TODO: logging
 		//TODO: logging
 		//TODO: logging
@@ -222,9 +248,9 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 					onAddedBefore.accept(t);
 
 					try {
-						Runnable terminator = op.publish(t);
+						OSGiResult terminator = op.publish(t);
 
-						OSGiResult result = () -> {
+						OSGiResult result = new OSGiResultImpl(() -> {
 							try {
 								onRemovedBefore.accept(t);
 							}
@@ -245,7 +271,19 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 							catch (Exception e) {
 								//TODO: logging
 							}
-						};
+						},
+							us -> {
+								UpdateQuery.From<T>[] froms = updateQuery.froms;
+
+								for (UpdateQuery.From<T> from : froms) {
+									if (from.selector == us || from.selector == UpdateSelector.ALL) {
+										from.consumer.accept(t);
+									}
+								}
+
+								terminator.update(us);
+							}
+						);
 
 						try {
 							onAddedAfter.accept(t);
@@ -353,11 +391,18 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 				)
 			));
 
-			return () -> {
-				pads.values().forEach(Pad::close);
+			return new OSGiResultImpl(
+				() -> {
+					pads.values().forEach(Pad::close);
 
-				result.close();
-			};
+					result.close();
+				},
+				us -> {
+					pads.values().forEach(pad -> pad.update(us));
+
+					result.close();
+				}
+			);
 		});
 	}
 

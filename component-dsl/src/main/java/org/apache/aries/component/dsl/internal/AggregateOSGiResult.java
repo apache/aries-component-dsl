@@ -18,41 +18,45 @@
 package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
-import org.apache.aries.component.dsl.OSGiRunnable;
-import org.apache.aries.component.dsl.Publisher;
+import org.apache.aries.component.dsl.update.UpdateSelector;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Carlos Sierra Andrés
  */
-public class ProbeImpl<T> extends BaseOSGiImpl<T> {
+public class AggregateOSGiResult implements OSGiResult {
 
-    public ProbeImpl() {
-        super(new ProbeOperationImpl<>());
+    private OSGiResult[] results;
+
+    public AggregateOSGiResult(OSGiResult ... results) {
+        this.results = results;
     }
 
-    public Publisher<? super T> getPublisher() {
-        return ((ProbeOperationImpl<T>) _operation)._op;
-    }
-
-    private static class ProbeOperationImpl<T> implements OSGiRunnable<T> {
-
-        private volatile OSGiResult _onClose = NOOP;
-
-        @Override
-        public OSGiResultImpl run(
-            ExecutionContext executionContext, Publisher<? super T> op) {
-            _op = op;
-
-            return new OSGiResultImpl(
-                () -> {_onClose.close(); _onClose = NOOP;},
-                us -> _onClose.update(us)
-            );
+    @Override
+    public void close() {
+        if (_closed.compareAndSet(false, true)) {
+            for (OSGiResult result : results) {
+                try {
+                    result.close();
+                } catch (Exception e) {
+                }
+            }
         }
-
-        Publisher<? super T> _op;
     }
 
-    public void onClose(OSGiResult onClose) {
-        ((ProbeOperationImpl<T>) _operation)._onClose = onClose;
+    @Override
+    public void update(UpdateSelector updateSelector) {
+        if (!_closed.get()) {
+            for (OSGiResult result : results) {
+                try {
+                    result.update(updateSelector);
+                } catch (Exception e) {
+                }
+            }
+        }
     }
+
+    private final AtomicBoolean _closed = new AtomicBoolean();
+
 }

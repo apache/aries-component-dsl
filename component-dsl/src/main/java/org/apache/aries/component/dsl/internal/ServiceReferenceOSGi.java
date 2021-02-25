@@ -17,6 +17,7 @@
 
 package org.apache.aries.component.dsl.internal;
 
+import org.apache.aries.component.dsl.OSGiResult;
 import org.apache.aries.component.dsl.Refresher;
 import org.apache.aries.component.dsl.CachingServiceReference;
 import org.apache.aries.component.dsl.Publisher;
@@ -41,7 +42,7 @@ public class ServiceReferenceOSGi<T>
 		Refresher<? super CachingServiceReference<T>> refresher) {
 
 		super((executionContext, op) -> {
-			ServiceTracker<T, ?>
+			ServiceTracker<T, Tracked<T>>
 				serviceTracker = new ServiceTracker<>(
 					executionContext.getBundleContext(),
 					buildFilter(executionContext, filterString, clazz),
@@ -49,7 +50,11 @@ public class ServiceReferenceOSGi<T>
 
 			serviceTracker.open();
 
-			return new OSGiResultImpl(serviceTracker::close);
+			return new OSGiResultImpl(
+				serviceTracker::close,
+				us -> serviceTracker.getTracked().forEach(
+					(__, tracked) -> tracked.runnable.update(us))
+			);
 		});
 	}
 
@@ -105,14 +110,14 @@ public class ServiceReferenceOSGi<T>
 
 		public Tracked(
 			CachingServiceReference<T> cachingServiceReference,
-			Runnable runnable) {
+			OSGiResult osgiResult) {
 
 			this.cachingServiceReference = cachingServiceReference;
-			this.runnable = runnable;
+			this.runnable = osgiResult;
 		}
 
 		volatile CachingServiceReference<T> cachingServiceReference;
-		volatile Runnable runnable;
+		volatile OSGiResult runnable;
 
 	}
 }

@@ -15,16 +15,9 @@
  * limitations under the License.
  */
 
-package org.apache.aries.component.dsl.internal;
+package org.apache.aries.component.dsl.update;
 
-import org.apache.aries.component.dsl.OSGi;
+public interface UpdateSelector {
 
-/**
- * @author Carlos Sierra Andrés
- */
-public class NothingOSGiImpl<S> extends OSGiImpl<S> {
-
-	public NothingOSGiImpl() {
-		super((executionContext, __) -> new OSGiResultImpl(OSGi.NOOP,  ___ -> {}));
-	}
+    public static final UpdateSelector ALL = new UpdateSelector() {};
 }

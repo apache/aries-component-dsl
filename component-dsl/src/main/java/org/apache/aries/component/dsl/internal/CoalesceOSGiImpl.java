@@ -70,7 +70,7 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
                             () -> result.set(op.publish(t)));
                     }
 
-                    return () -> UpdateSupport.deferTermination(() -> {
+                    return new OSGiResultImpl(() -> UpdateSupport.deferTermination(() -> {
                         synchronized (initialized) {
                             result.get().close();
 
@@ -92,6 +92,11 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
                                     }
                                 }
                             }
+                        }
+                    }),
+                    us -> {
+                        synchronized (initialized) {
+                            result.get().update(us);
                         }
                     });
                 };
@@ -121,6 +126,13 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
 
                         for (int i = 0; i <= index.get(); i++) {
                             results[i].close();
+                        }
+                    }
+                },
+                us -> {
+                    synchronized (initialized) {
+                        for (int i = 0; i <= index.get(); i++) {
+                            results[i].update(us);
                         }
                     }
                 }

@@ -15,16 +15,6 @@
  * limitations under the License.
  */
 
-package org.apache.aries.component.dsl.internal;
-
-import org.apache.aries.component.dsl.OSGi;
-
-/**
- * @author Carlos Sierra Andrés
- */
-public class NothingOSGiImpl<S> extends OSGiImpl<S> {
-
-	public NothingOSGiImpl() {
-		super((executionContext, __) -> new OSGiResultImpl(OSGi.NOOP,  ___ -> {}));
-	}
-}
+@org.osgi.annotation.bundle.Export
+@org.osgi.annotation.versioning.Version("1.0.0")
+package org.apache.aries.component.dsl.update;

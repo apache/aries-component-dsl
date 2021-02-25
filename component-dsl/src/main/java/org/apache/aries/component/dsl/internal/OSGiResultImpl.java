@@ -18,16 +18,19 @@
 package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
+import org.apache.aries.component.dsl.update.UpdateSelector;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * @author Carlos Sierra Andrés
  */
 public class OSGiResultImpl implements OSGiResult {
 
-	public OSGiResultImpl(OSGiResult close) {
+	public OSGiResultImpl(Runnable close, Consumer<UpdateSelector> onUpdate) {
 		this.close = close;
+		this.onUpdate = onUpdate;
 	}
 
 	@Override
@@ -37,7 +40,18 @@ public class OSGiResultImpl implements OSGiResult {
 		}
 	}
 
+	@Override
+	public void update(UpdateSelector updateSelector) {
+		if (_closed.get()) {
+			return;
+		}
+
+		onUpdate.accept(updateSelector);
+	}
+
 	private final Runnable close;
+	private Consumer<UpdateSelector> onUpdate;
+	private Runnable update;
 	private AtomicBoolean _closed = new AtomicBoolean();
 
 }

@@ -17,6 +17,7 @@
 
 package org.apache.aries.component.dsl.internal;
 
+import org.apache.aries.component.dsl.OSGiResult;
 import org.apache.aries.component.dsl.Publisher;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
@@ -86,7 +87,7 @@ public class ServiceRegistrationOSGiImpl<T>
 		ServiceRegistration<?> serviceRegistration,
 		Publisher<? super ServiceRegistration<T>> op) {
 
-		Runnable terminator = ((Publisher)op).publish(serviceRegistration);
+		OSGiResult terminator = ((Publisher)op).publish(serviceRegistration);
 
 		return new OSGiResultImpl(
             () -> {
@@ -98,7 +99,9 @@ public class ServiceRegistrationOSGiImpl<T>
                 finally {
                     terminator.run();
                 }
-            });
+            },
+			terminator::update
+		);
 	}
 
 }

@@ -15,16 +15,37 @@
  * limitations under the License.
  */
 
-package org.apache.aries.component.dsl.internal;
+package org.apache.aries.component.dsl.update;
 
-import org.apache.aries.component.dsl.OSGi;
+import java.util.function.Consumer;
 
 /**
  * @author Carlos Sierra Andrés
  */
-public class NothingOSGiImpl<S> extends OSGiImpl<S> {
+public final class UpdateQuery<T> {
+    public final From<T>[] froms;
 
-	public NothingOSGiImpl() {
-		super((executionContext, __) -> new OSGiResultImpl(OSGi.NOOP,  ___ -> {}));
-	}
+    @SafeVarargs
+    public UpdateQuery(From<T>... froms) {
+        this.froms = froms;
+    }
+
+    @SafeVarargs
+    public static <T> UpdateQuery<T> onUpdate(From<T> ... froms) {
+        return new UpdateQuery<>(froms);
+    }
+
+    public static class From<T> {
+        public final UpdateSelector selector;
+        public final Consumer<T> consumer;
+
+        public From(UpdateSelector selector, Consumer<T> consumer) {
+            this.selector = selector;
+            this.consumer = consumer;
+        }
+
+        public static <T> From<T> from(UpdateSelector selector, Consumer<T> consumer) {
+            return new From<>(selector, consumer);
+        }
+    }
 }

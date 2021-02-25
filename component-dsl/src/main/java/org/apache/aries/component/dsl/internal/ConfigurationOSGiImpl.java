@@ -17,6 +17,7 @@
 
 package org.apache.aries.component.dsl.internal;
 
+import org.apache.aries.component.dsl.OSGiResult;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -42,8 +43,9 @@ public class ConfigurationOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 			AtomicReference<Configuration> atomicReference =
 				new AtomicReference<>(null);
 
-			AtomicReference<Runnable>
-				terminatorAtomicReference = new AtomicReference<>(() -> {});
+			AtomicReference<OSGiResult>
+				terminatorAtomicReference = new AtomicReference<>(
+					new OSGiResultImpl(NOOP, __ -> {}));
 
 			AtomicBoolean closed = new AtomicBoolean();
 
@@ -138,7 +140,9 @@ public class ConfigurationOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 					serviceRegistration.unregister();
 
 					signalLeave(terminatorAtomicReference);
-				});
+				},
+				us -> terminatorAtomicReference.get().update(us))
+			;
 		});
 	}
 
@@ -180,9 +184,9 @@ public class ConfigurationOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 	}
 
 	private static void signalLeave(
-		AtomicReference<Runnable> terminatorAtomicReference) {
+		AtomicReference<OSGiResult> terminatorAtomicReference) {
 
-		Runnable old = terminatorAtomicReference.getAndSet(null);
+		OSGiResult old = terminatorAtomicReference.getAndSet(null);
 
 		if (old != null) {
             old.run();

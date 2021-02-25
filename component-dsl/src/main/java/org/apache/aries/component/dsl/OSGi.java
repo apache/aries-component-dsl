@@ -44,6 +44,7 @@ import org.apache.aries.component.dsl.function.Function26;
 import org.apache.aries.component.dsl.function.Function3;
 import org.apache.aries.component.dsl.function.Function5;
 import org.apache.aries.component.dsl.function.Function7;
+import org.apache.aries.component.dsl.update.UpdateQuery;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
@@ -303,11 +304,12 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 			() -> effect.getOnIncoming().accept(null),
 			NOOP,
 			NOOP,
-			() -> effect.getOnLeaving().accept(null));
+			() -> effect.getOnLeaving().accept(null),
+			UpdateQuery.onUpdate());
 	}
 
 	static OSGi<Void> effects(Runnable onAdding, Runnable onRemoving) {
-		return new EffectsOSGi(onAdding, NOOP, NOOP, onRemoving);
+		return new EffectsOSGi(onAdding, NOOP, NOOP, onRemoving, UpdateQuery.onUpdate());
 	}
 
 	static OSGi<Void> effects(
@@ -315,7 +317,16 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		Runnable onRemovingBefore, Runnable onRemovingAfter) {
 
 		return new EffectsOSGi(
-			onAddingBefore, onAddingAfter, onRemovingBefore, onRemovingAfter);
+			onAddingBefore, onAddingAfter, onRemovingBefore, onRemovingAfter,
+			UpdateQuery.onUpdate());
+	}
+
+	static OSGi<Void> effects(
+		Runnable onAddingBefore, Runnable onAddingAfter,
+		Runnable onRemovingBefore, Runnable onRemovingAfter, UpdateQuery<Void> updateQuery) {
+
+		return new EffectsOSGi(
+			onAddingBefore, onAddingAfter, onRemovingBefore, onRemovingAfter, updateQuery);
 	}
 
 	static <T> OSGi<T> fromOsgiRunnable(OSGiRunnable<T> runnable) {

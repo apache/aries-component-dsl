@@ -44,7 +44,7 @@ public class DistributeOSGiImpl<T, S> extends BaseOSGiImpl<S> {
             OSGiResult result = operation.run(
                 executionContext,
                 publisher.pipe(t -> {
-                    List<Runnable> terminators = new ArrayList<>(funs.length);
+                    List<OSGiResult> terminators = new ArrayList<>(funs.length);
 
                     int i = 0;
 
@@ -59,25 +59,18 @@ public class DistributeOSGiImpl<T, S> extends BaseOSGiImpl<S> {
                         throw e;
                     }
 
-                    return () -> cleanUp(terminators);
+                    return new OSGiResultImpl(
+                        () -> cleanUp(terminators),
+                        us -> terminators.forEach(os -> os.update(us))
+                    );
                 }));
 
-            return () -> {
-                result.close();
-
-                for (Pad<T, S> pad : pads) {
-                    try {
-                        pad.close();
-                    }
-                    catch (Exception e) {
-                    }
-                }
-            };
+            return new AggregateOSGiResult(result, new AggregateOSGiResult(pads));
         });
     }
 
-    private static void cleanUp(List<Runnable> terminators) {
-        ListIterator<Runnable> iterator =
+    private static void cleanUp(List<OSGiResult> terminators) {
+        ListIterator<OSGiResult> iterator =
             terminators.listIterator(terminators.size());
 
         while (iterator.hasPrevious()) {

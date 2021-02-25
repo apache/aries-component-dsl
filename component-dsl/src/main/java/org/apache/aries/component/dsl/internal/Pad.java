@@ -21,8 +21,8 @@ import org.apache.aries.component.dsl.OSGi;
 import org.apache.aries.component.dsl.OSGiResult;
 import org.apache.aries.component.dsl.OSGiRunnable.ExecutionContext;
 import org.apache.aries.component.dsl.Publisher;
+import org.apache.aries.component.dsl.update.UpdateSelector;
 
-import java.io.Closeable;
 import java.util.function.Function;
 
 import static org.apache.aries.component.dsl.OSGi.NOOP;
@@ -30,7 +30,7 @@ import static org.apache.aries.component.dsl.OSGi.NOOP;
 /**
  * @author Carlos Sierra Andrés
  */
-public class Pad<T, S> implements Publisher<T>, Closeable {
+public class Pad<T, S> implements Publisher<T>, OSGiResult {
 
     public Pad(
         ExecutionContext bundleContext,
@@ -53,6 +53,11 @@ public class Pad<T, S> implements Publisher<T>, Closeable {
     @Override
     public void close() {
         _result.close();
+    }
+
+    @Override
+    public void update(UpdateSelector updateSelector) {
+        _result.update(updateSelector);
     }
 
     @Override

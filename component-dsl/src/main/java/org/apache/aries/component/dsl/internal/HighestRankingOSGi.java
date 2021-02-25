@@ -56,64 +56,68 @@ public class HighestRankingOSGi<T> extends OSGiImpl<T> {
                             Tuple<T> old = sent.get();
 
                             if (old != null) {
-                                old._runnable.run();
+                                old.osgiResult.run();
                             }
 
-                            tuple._runnable = publisher.apply(t);
+                            tuple.osgiResult = publisher.apply(t);
 
                             if (old != null) {
-                                old._runnable = notHighestPad.publish(old._t);
+                                old.osgiResult = notHighestPad.publish(old.t);
                             }
 
                             sent.set(tuple);
                         } else {
-                            tuple._runnable = notHighestPad.publish(t);
+                            tuple.osgiResult = notHighestPad.publish(t);
                         }
                     }
 
-                    return () -> {
-                        synchronized (set) {
-                            Tuple<T> old = set.peek();
+                    return new OSGiResultImpl(
+                        () -> {
+                            synchronized (set) {
+                                Tuple<T> old = set.peek();
 
-                            set.remove(tuple);
+                                set.remove(tuple);
 
-                            Tuple<T> current = set.peek();
+                                Tuple<T> current = set.peek();
 
-                            tuple._runnable.run();
+                                tuple.osgiResult.run();
 
-                            if (current != old && current != null) {
-                                current._runnable.run();
-                                current._runnable = publisher.apply(
-                                    current._t);
-                                sent.set(current);
+                                if (current != old && current != null) {
+                                    current.osgiResult.run();
+                                    current.osgiResult = publisher.apply(
+                                        current.t);
+                                    sent.set(current);
+                                }
+                                if (current == null) {
+                                    sent.set(null);
+                                }
                             }
-                            if (current == null) {
-                                sent.set(null);
+                        },
+                        us -> {
+                            synchronized (set) {
+                                Tuple<T> current = set.peek();
+
+                                current.osgiResult.update(us);
                             }
                         }
-                    };
+                    );
                 }));
 
-            return new OSGiResultImpl(
-                () -> {
-                    result.close();
-
-                    notHighestPad.close();
-                });
+            return new AggregateOSGiResult(result, notHighestPad);
         });
     }
 
     private static class Tuple<T> {
 
         Tuple(T t) {
-            _t = t;
+            this.t = t;
         }
 
         public T getT() {
-            return _t;
+            return t;
         }
-        T _t;
-        Runnable _runnable;
+        T t;
+        OSGiResult osgiResult;
 
     }
 

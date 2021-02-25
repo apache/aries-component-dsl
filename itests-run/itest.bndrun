@@ -32,6 +32,7 @@
 	org.apache.servicemix.bundles.junit;version='[4.12.0,4.12.1)',\
 	org.apache.felix.configadmin;version='[1.9.14,1.9.15)',\
 	org.osgi.service.cm;version='[1.6.0,1.6.1)',\
-	org.apache.aries.component-dsl.itests;version='[2.0.0,2.0.1)'
+	org.apache.aries.component-dsl.itests;version='[2.0.0,2.0.1)',\
+	org.apache.aries.component-dsl.component-dsl;version='[2.0.0,2.0.1)'
 
 -include: -personal.bnd

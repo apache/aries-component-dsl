@@ -52,7 +52,9 @@ public class JustOSGiImpl<T> extends OSGiImpl<T> {
 			}
 
 			return new OSGiResultImpl(
-				() -> cleanUp(references));
+				() -> cleanUp(references),
+				us -> {}
+			);
 		});
 	}
 
