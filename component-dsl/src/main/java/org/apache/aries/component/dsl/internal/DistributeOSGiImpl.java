@@ -61,7 +61,11 @@ public class DistributeOSGiImpl<T, S> extends BaseOSGiImpl<S> {
 
                     return new OSGiResultImpl(
                         () -> cleanUp(terminators),
-                        us -> terminators.forEach(os -> os.update(us))
+                        us -> terminators.stream().map(
+                            os -> os.update(us)
+                        ).reduce(
+                            Boolean.FALSE, Boolean::logicalOr
+                        )
                     );
                 }));
 

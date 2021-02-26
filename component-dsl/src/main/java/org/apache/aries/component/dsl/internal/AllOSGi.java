@@ -46,7 +46,7 @@ public class AllOSGi<T> extends OSGiImpl<T> {
 
             return new OSGiResultImpl(
                 () -> cleanUp(results),
-                us -> results.forEach(result -> result.update(us))
+                us -> results.stream().map(result -> result.update(us)).reduce(Boolean.FALSE, Boolean::logicalOr)
             );
         });
     }

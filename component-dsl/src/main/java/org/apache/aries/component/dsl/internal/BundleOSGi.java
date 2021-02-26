@@ -66,7 +66,11 @@ public class BundleOSGi extends OSGiImpl<Bundle> {
 
 			return new OSGiResultImpl(
 				bundleTracker::close,
-				us -> bundleTracker.getTracked().values().forEach(result -> result.update(us))
+				us -> bundleTracker.getTracked().values().stream().map(
+					result -> result.update(us)
+				).reduce(
+					Boolean.FALSE, Boolean::logicalOr
+				)
 			);
 		});
 

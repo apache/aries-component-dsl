@@ -136,12 +136,13 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 							},
 							us -> {
 								synchronized (identities) {
-
-									identities.forEach(t -> {
+									return identities.stream().map(t -> {
 										OSGiResult terminator = terminators.get(t).get(f);
 
-										terminator.update(us);
-									});
+										return terminator.update(us);
+									}).reduce(
+										Boolean.FALSE, Boolean::logicalOr
+									);
 								}
 							}
 						);
@@ -176,11 +177,13 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 							},
 							us -> {
 								synchronized (identities) {
-									functions.forEach(f -> {
+									return functions.stream().map(f -> {
 										OSGiResult terminator = terminators.get(t).get(f);
 
-										terminator.update(us);
-									});
+										return terminator.update(us);
+									}).reduce(
+										Boolean.FALSE, Boolean::logicalOr
+									);
 								}
 							}
 						);
@@ -281,7 +284,7 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 									}
 								}
 
-								terminator.update(us);
+								return terminator.update(us);
 							}
 						);
 
@@ -397,11 +400,11 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 
 					result.close();
 				},
-				us -> {
-					pads.values().forEach(pad -> pad.update(us));
-
-					result.close();
-				}
+				us -> pads.values().stream().map(
+					pad -> pad.update(us)
+				).reduce(
+					Boolean.FALSE, Boolean::logicalOr
+				) | result.update(us)
 			);
 		});
 	}

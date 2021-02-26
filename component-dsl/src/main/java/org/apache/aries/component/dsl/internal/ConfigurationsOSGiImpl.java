@@ -150,13 +150,11 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 						}
 					}
 				},
-				us -> {
-					for (OSGiResult osgiResult : terminators.values()) {
-						if (osgiResult != null) {
-							osgiResult.run();
-						}
-					}
-				});
+				us -> terminators.values().stream().map(
+					osgiResult -> osgiResult.update(us)
+				).reduce(
+					Boolean.FALSE, Boolean::logicalOr
+				));
 		});
 	}
 

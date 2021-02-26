@@ -68,7 +68,7 @@ public class EffectsOSGi extends OSGiImpl<Void> {
                             }
                         }
 
-                        terminator.update(us);
+                        return terminator.update(us);
                     }
                 );
 

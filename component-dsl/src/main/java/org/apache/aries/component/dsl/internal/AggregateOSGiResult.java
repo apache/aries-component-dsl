@@ -46,15 +46,19 @@ public class AggregateOSGiResult implements OSGiResult {
     }
 
     @Override
-    public void update(UpdateSelector updateSelector) {
+    public boolean update(UpdateSelector updateSelector) {
+        boolean bool = false;
+
         if (!_closed.get()) {
             for (OSGiResult result : results) {
                 try {
-                    result.update(updateSelector);
+                    bool |= result.update(updateSelector);
                 } catch (Exception e) {
                 }
             }
         }
+
+        return bool;
     }
 
     private final AtomicBoolean _closed = new AtomicBoolean();

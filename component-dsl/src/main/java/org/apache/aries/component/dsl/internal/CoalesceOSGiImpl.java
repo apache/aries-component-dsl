@@ -21,6 +21,7 @@ import org.apache.aries.component.dsl.OSGi;
 import org.apache.aries.component.dsl.OSGiResult;
 import org.apache.aries.component.dsl.Publisher;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -96,7 +97,7 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
                     }),
                     us -> {
                         synchronized (initialized) {
-                            result.get().update(us);
+                            return result.get().update(us);
                         }
                     });
                 };
@@ -131,9 +132,11 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
                 },
                 us -> {
                     synchronized (initialized) {
-                        for (int i = 0; i <= index.get(); i++) {
-                            results[i].update(us);
-                        }
+                        return Arrays.stream(results).map(
+                            res -> res.update(us)
+                        ).reduce(
+                            Boolean.FALSE, Boolean::logicalOr
+                        );
                     }
                 }
             );

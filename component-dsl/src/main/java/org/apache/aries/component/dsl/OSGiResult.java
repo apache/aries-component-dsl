@@ -31,6 +31,8 @@ public interface OSGiResult extends AutoCloseable, Runnable {
 		close();
 	}
 
-	public default void update(UpdateSelector updateSelector) {};
+	public default boolean update(UpdateSelector updateSelector) {
+		return false;
+	};
 
 }

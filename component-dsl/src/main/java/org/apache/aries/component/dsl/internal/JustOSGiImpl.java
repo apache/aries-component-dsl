@@ -19,6 +19,8 @@
 package org.apache.aries.component.dsl.internal;
 
 
+import org.apache.aries.component.dsl.OSGiResult;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,7 +40,7 @@ public class JustOSGiImpl<T> extends OSGiImpl<T> {
 		super((executionContext, op) -> {
 
 			Collection<T> collection = supplier.get();
-			ArrayList<Runnable> references = new ArrayList<>(collection.size());
+			ArrayList<OSGiResult> references = new ArrayList<>(collection.size());
 
 			try {
 				for (T t : collection) {
@@ -53,13 +55,13 @@ public class JustOSGiImpl<T> extends OSGiImpl<T> {
 
 			return new OSGiResultImpl(
 				() -> cleanUp(references),
-				us -> {}
+				us -> references.stream().map(res -> res.update(us)).reduce(Boolean.FALSE, Boolean::logicalOr)
 			);
 		});
 	}
 
-	private static void cleanUp(ArrayList<Runnable> references) {
-		ListIterator<Runnable> iterator =
+	private static void cleanUp(ArrayList<OSGiResult> references) {
+		ListIterator<OSGiResult> iterator =
 			references.listIterator(references.size());
 
 		while (iterator.hasPrevious()) {

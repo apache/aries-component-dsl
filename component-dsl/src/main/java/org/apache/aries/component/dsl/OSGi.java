@@ -45,6 +45,7 @@ import org.apache.aries.component.dsl.function.Function3;
 import org.apache.aries.component.dsl.function.Function5;
 import org.apache.aries.component.dsl.function.Function7;
 import org.apache.aries.component.dsl.update.UpdateQuery;
+import org.apache.aries.component.dsl.update.UpdateSelector;
 import org.apache.aries.component.dsl.update.UpdateTuple;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -56,11 +57,7 @@ import org.osgi.framework.ServiceRegistration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 /**
  * @author Carlos Sierra Andrés
@@ -331,7 +328,12 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	}
 
 	static <T> OSGi<T> fromOsgiRunnable(OSGiRunnable<T> runnable) {
-		return getOsgiFactory().create(runnable);
+		return getOsgiFactory().create(
+			(ec, op) -> new OSGiResultImpl(runnable.run(ec, op), __ -> true));
+	}
+
+	static <T> OSGi<T> fromOsgiRunnableWithUpdateSupport(OSGiRunnable<T> runnable) {
+		return getOsgiFactory().create(runnable::run);
 	}
 
 	static OSGiFactory getOsgiFactory() {
@@ -449,6 +451,10 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		return new RecoverWithOSGi<>(program, function);
 	}
 
+	static <T> OSGi<T> refreshWhen(OSGi<T> program, BiPredicate<UpdateSelector, T> refresher) {
+		return new RefreshWhenOSGi<>(program, refresher);
+	}
+
 	static <T> OSGi<ServiceRegistration<T>> register(
 		Class<T> clazz, T service, Map<String, Object> properties) {
 
@@ -544,21 +550,28 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		Class<T> clazz, String filterString,
 		Refresher<? super CachingServiceReference<T>> onModified) {
 
-		return new ServiceReferenceOSGi<>(filterString, clazz, onModified).map(UpdateTuple::getT);
+		return refreshWhen(
+			serviceReferences(clazz, filterString),
+			(__, csr) -> onModified.test(csr));
+
 	}
 
 	static <T> OSGi<CachingServiceReference<T>> serviceReferences(
 		Class<T> clazz,
 		Refresher<? super CachingServiceReference<T>> onModified) {
 
-		return new ServiceReferenceOSGi<>(null, clazz, onModified).map(UpdateTuple::getT);
+		return refreshWhen(
+			serviceReferences(clazz, (String)null),
+			(__, csr) -> onModified.test(csr));
 	}
 
 	static OSGi<CachingServiceReference<Object>> serviceReferences(
 		String filterString,
 		Refresher<? super CachingServiceReference<Object>> onModified) {
 
-		return new ServiceReferenceOSGi<>(filterString, null, onModified).map(UpdateTuple::getT);
+		return refreshWhen(
+			serviceReferences(null, filterString),
+			(__, csr) -> onModified.test(csr));
 	}
 
 	static <T> OSGi<T> services(Class<T> clazz) {

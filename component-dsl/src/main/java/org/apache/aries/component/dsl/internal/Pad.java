@@ -56,8 +56,8 @@ public class Pad<T, S> implements Publisher<T>, OSGiResult {
     }
 
     @Override
-    public void update(UpdateSelector updateSelector) {
-        _result.update(updateSelector);
+    public boolean update(UpdateSelector updateSelector) {
+        return _result.update(updateSelector);
     }
 
     @Override

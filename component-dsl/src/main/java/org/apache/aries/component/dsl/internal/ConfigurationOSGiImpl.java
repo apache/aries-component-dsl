@@ -45,7 +45,7 @@ public class ConfigurationOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 
 			AtomicReference<OSGiResult>
 				terminatorAtomicReference = new AtomicReference<>(
-					new OSGiResultImpl(NOOP, __ -> {}));
+					new OSGiResultImpl(NOOP, __ -> false));
 
 			AtomicBoolean closed = new AtomicBoolean();
 
