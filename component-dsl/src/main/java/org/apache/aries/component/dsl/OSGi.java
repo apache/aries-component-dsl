@@ -574,6 +574,24 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 			(__, csr) -> onModified.test(csr));
 	}
 
+	static <T> OSGi<UpdateTuple<CachingServiceReference<T>>> serviceReferencesUpdatable(
+		Class<T> clazz) {
+
+		return new ServiceReferenceOSGi<>(null, clazz);
+	}
+
+	static OSGi<UpdateTuple<CachingServiceReference<Object>>> serviceReferencesUpdatable(
+		String filterString) {
+
+		return new ServiceReferenceOSGi<>(filterString, null);
+	}
+
+	static <T> OSGi<UpdateTuple<CachingServiceReference<T>>> serviceReferencesUpdatable(
+		Class<T> clazz, String filterString) {
+
+		return new ServiceReferenceOSGi<>(filterString, clazz);
+	}
+
 	static <T> OSGi<T> services(Class<T> clazz) {
 		return services(clazz, null);
 	}
