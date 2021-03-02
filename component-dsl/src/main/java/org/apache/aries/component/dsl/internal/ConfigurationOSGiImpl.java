@@ -18,6 +18,7 @@
 package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
+import org.apache.aries.component.dsl.configuration.ConfigurationHolder;
 import org.apache.aries.component.dsl.update.UpdateSelector;
 import org.apache.aries.component.dsl.update.UpdateTuple;
 import org.osgi.framework.BundleContext;
@@ -38,7 +39,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * @author Carlos Sierra Andrés
  */
-public class ConfigurationOSGiImpl extends OSGiImpl<UpdateTuple<Configuration>> {
+public class ConfigurationOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHolder>> {
 
 	public ConfigurationOSGiImpl(String pid) {
 		super((executionContext, op) -> {
@@ -109,7 +110,9 @@ public class ConfigurationOSGiImpl extends OSGiImpl<UpdateTuple<Configuration>> 
 
 								terminatorAtomicReference.set(
 									op.apply(
-										new UpdateTuple<>(updateSelector, configuration)));
+										new UpdateTuple<>(
+											updateSelector,
+											new ConfigurationHolderImpl(configuration))));
 
 							});
 
@@ -138,7 +141,10 @@ public class ConfigurationOSGiImpl extends OSGiImpl<UpdateTuple<Configuration>> 
                     initialCounter.set(configuration.getChangeCount());
 
                     terminatorAtomicReference.set(
-                        op.apply(new UpdateTuple<>(updateSelector, configuration)));
+                        op.apply(
+                        	new UpdateTuple<>(
+                        		updateSelector,
+								new ConfigurationHolderImpl(configuration))));
                 }
 			}
 

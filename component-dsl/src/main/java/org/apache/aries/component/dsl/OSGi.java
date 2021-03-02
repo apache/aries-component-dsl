@@ -18,6 +18,7 @@
 
 package org.apache.aries.component.dsl;
 
+import org.apache.aries.component.dsl.configuration.ConfigurationHolder;
 import org.apache.aries.component.dsl.function.Function10;
 import org.apache.aries.component.dsl.function.Function14;
 import org.apache.aries.component.dsl.function.Function16;
@@ -297,7 +298,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		).map(
 			UpdateTuple::getT
 		).map(
-			Configuration::getProperties
+			ConfigurationHolder::getUpdatedProperties
 		);
 	}
 
@@ -308,7 +309,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		).map(
 			UpdateTuple::getT
 		).map(
-			Configuration::getProperties
+			ConfigurationHolder::getUpdatedProperties
 		);
 	}
 

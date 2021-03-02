@@ -18,6 +18,7 @@
 package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
+import org.apache.aries.component.dsl.configuration.ConfigurationHolder;
 import org.apache.aries.component.dsl.update.UpdateSelector;
 import org.apache.aries.component.dsl.update.UpdateTuple;
 import org.osgi.framework.BundleContext;
@@ -38,7 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author Carlos Sierra Andrés
  */
-public class ConfigurationsOSGiImpl extends OSGiImpl<UpdateTuple<Configuration>> {
+public class ConfigurationsOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHolder>> {
 
 	public ConfigurationsOSGiImpl(String factoryPid) {
 		super((executionContext, op) -> {
@@ -107,7 +108,11 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<UpdateTuple<Configuration>>
 							UpdateSupport.runUpdate(() -> {
 								signalLeave(pid, terminators);
 
-								terminators.put(pid, op.apply(new UpdateTuple<>(updateSelector, configuration)));
+								terminators.put(
+									pid, op.apply(
+										new UpdateTuple<>(
+											updateSelector,
+											new ConfigurationHolderImpl(configuration))));
 							});
 
 							if (closed.get()) {
@@ -129,12 +134,16 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<UpdateTuple<Configuration>>
 				Configuration[] configurations = getConfigurations(
 					bundleContext, factoryPid, serviceReference);
 
-				for (Configuration c : configurations) {
-					configurationCounters.put(c.getPid(), c.getChangeCount());
+				for (Configuration configuration : configurations) {
+					configurationCounters.put(
+						configuration.getPid(), configuration.getChangeCount());
 
 					terminators.put(
-						c.getPid(),
-						op.publish(new UpdateTuple<>(updateSelector, c)));
+						configuration.getPid(),
+						op.publish(
+							new UpdateTuple<>(
+								updateSelector,
+								new ConfigurationHolderImpl(configuration))));
 				}
 			}
 
