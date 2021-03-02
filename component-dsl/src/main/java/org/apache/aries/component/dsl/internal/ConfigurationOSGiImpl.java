@@ -18,6 +18,8 @@
 package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
+import org.apache.aries.component.dsl.update.UpdateSelector;
+import org.apache.aries.component.dsl.update.UpdateTuple;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -26,17 +28,17 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
 
-import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Carlos Sierra Andrés
  */
-public class ConfigurationOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
+public class ConfigurationOSGiImpl extends OSGiImpl<UpdateTuple<Configuration>> {
 
 	public ConfigurationOSGiImpl(String pid) {
 		super((executionContext, op) -> {
@@ -48,6 +50,10 @@ public class ConfigurationOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 					new OSGiResultImpl(NOOP, __ -> false));
 
 			AtomicBoolean closed = new AtomicBoolean();
+
+			UpdateSelector updateSelector = new UpdateSelector() {};
+
+			AtomicLong initialCounter = new AtomicLong();
 
 			CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -83,24 +89,27 @@ public class ConfigurationOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 							 configuration = getConfiguration(
 								 bundleContext, configurationEvent);
 
-							if (configuration == null) {
+							if (configuration == null ||
+								configuration.getChangeCount() == initialCounter.get()) {
+
 								return;
 							}
 
-							Configuration old = atomicReference.get();
-
-							if (old == null ||
-								configuration.getChangeCount() !=
-									old.getChangeCount()) {
-
+							if (atomicReference.get() == null) {
 								atomicReference.set(configuration);
+							}
+							else {
+								if (!terminatorAtomicReference.get().update(updateSelector)) {
+									return;
+								}
 							}
 
 							UpdateSupport.runUpdate(() -> {
 								signalLeave(terminatorAtomicReference);
 
 								terminatorAtomicReference.set(
-									op.apply(configuration.getProperties()));
+									op.apply(
+										new UpdateTuple<>(updateSelector, configuration)));
 
 							});
 
@@ -126,8 +135,10 @@ public class ConfigurationOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 				if (configuration != null) {
                     atomicReference.set(configuration);
 
+                    initialCounter.set(configuration.getChangeCount());
+
                     terminatorAtomicReference.set(
-                        op.apply(configuration.getProperties()));
+                        op.apply(new UpdateTuple<>(updateSelector, configuration)));
                 }
 			}
 

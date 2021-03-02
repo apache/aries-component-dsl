@@ -18,6 +18,8 @@
 package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
+import org.apache.aries.component.dsl.update.UpdateSelector;
+import org.apache.aries.component.dsl.update.UpdateTuple;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -36,17 +38,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author Carlos Sierra Andrés
  */
-public class ConfigurationsOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
+public class ConfigurationsOSGiImpl extends OSGiImpl<UpdateTuple<Configuration>> {
 
 	public ConfigurationsOSGiImpl(String factoryPid) {
 		super((executionContext, op) -> {
-			ConcurrentHashMap<String, Configuration> configurations =
+			ConcurrentHashMap<String, Long> configurationCounters =
 				new ConcurrentHashMap<>();
 
 			ConcurrentHashMap<String, OSGiResult> terminators =
 				new ConcurrentHashMap<>();
 
 			AtomicBoolean closed = new AtomicBoolean();
+
+			UpdateSelector updateSelector = new UpdateSelector() {};
 
 			CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -59,9 +63,7 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 						String incomingFactoryPid =
 							configurationEvent.getFactoryPid();
 
-						if (incomingFactoryPid == null ||
-							!factoryPid.equals(incomingFactoryPid)) {
-
+						if (!factoryPid.equals(incomingFactoryPid)) {
 							return;
 						}
 
@@ -79,7 +81,7 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 						if (configurationEvent.getType() ==
 							ConfigurationEvent.CM_DELETED) {
 
-							configurations.remove(pid);
+							configurationCounters.remove(pid);
 
 							signalLeave(pid, terminators);
 						}
@@ -87,27 +89,25 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 							configuration = getConfiguration(
 								bundleContext, configurationEvent);
 
-							Dictionary<String, Object> properties =
-								configuration.getProperties();
+							Long oldChangeCount = configurationCounters.putIfAbsent(
+								pid, configuration.getChangeCount());
 
-							configurations.compute(
-								pid,
-								(__, old) -> {
-									if (old == null ||
-										configuration.getChangeCount() !=
-											old.getChangeCount()) {
-
-										return configuration;
-									}
-
-									return old;
+							if (oldChangeCount != null) {
+								if (oldChangeCount == configuration.getChangeCount()) {
+									return;
 								}
-							);
+
+								OSGiResult osgiResult = terminators.get(pid);
+
+								if (osgiResult != null && !osgiResult.update(updateSelector)) {
+									return;
+								}
+							}
 
 							UpdateSupport.runUpdate(() -> {
 								signalLeave(pid, terminators);
 
-								terminators.put(pid, op.apply(properties));
+								terminators.put(pid, op.apply(new UpdateTuple<>(updateSelector, configuration)));
 							});
 
 							if (closed.get()) {
@@ -126,13 +126,15 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<Dictionary<String, ?>> {
 				bundleContext.getServiceReference(ConfigurationAdmin.class);
 
 			if (serviceReference != null) {
-				Configuration[] configuration = getConfigurations(
+				Configuration[] configurations = getConfigurations(
 					bundleContext, factoryPid, serviceReference);
 
-				for (Configuration c : configuration) {
-					configurations.put(c.getPid(), c);
+				for (Configuration c : configurations) {
+					configurationCounters.put(c.getPid(), c.getChangeCount());
 
-					terminators.put(c.getPid(), op.apply(c.getProperties()));
+					terminators.put(
+						c.getPid(),
+						op.publish(new UpdateTuple<>(updateSelector, c)));
 				}
 			}
 

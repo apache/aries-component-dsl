@@ -53,6 +53,7 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.Configuration;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -290,11 +291,25 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	}
 	
 	static OSGi<Dictionary<String, ?>> configuration(String pid) {
-		return new ConfigurationOSGiImpl(pid);
+		return refreshWhen(
+			new ConfigurationOSGiImpl(pid),
+			(__, ___) -> true
+		).map(
+			UpdateTuple::getT
+		).map(
+			Configuration::getProperties
+		);
 	}
 
 	static OSGi<Dictionary<String, ?>> configurations(String factoryPid) {
-		return new ConfigurationsOSGiImpl(factoryPid);
+		return refreshWhen(
+			new ConfigurationsOSGiImpl(factoryPid),
+			(__, ___) -> true
+		).map(
+			UpdateTuple::getT
+		).map(
+			Configuration::getProperties
+		);
 	}
 
 	static OSGi<Void> effect(Effect<Void> effect) {
