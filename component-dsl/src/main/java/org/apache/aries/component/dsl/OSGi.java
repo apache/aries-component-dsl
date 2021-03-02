@@ -590,24 +590,6 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 			(__, csr) -> onModified.test(csr));
 	}
 
-	static <T> OSGi<UpdateTuple<CachingServiceReference<T>>> serviceReferencesUpdatable(
-		Class<T> clazz) {
-
-		return new ServiceReferenceOSGi<>(null, clazz);
-	}
-
-	static OSGi<UpdateTuple<CachingServiceReference<Object>>> serviceReferencesUpdatable(
-		String filterString) {
-
-		return new ServiceReferenceOSGi<>(filterString, null);
-	}
-
-	static <T> OSGi<UpdateTuple<CachingServiceReference<T>>> serviceReferencesUpdatable(
-		Class<T> clazz, String filterString) {
-
-		return new ServiceReferenceOSGi<>(filterString, clazz);
-	}
-
 	static <T> OSGi<T> services(Class<T> clazz) {
 		return services(clazz, null);
 	}
@@ -657,6 +639,12 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	default OSGi<T> effects(Effect<? super T> effect) {
 		return effects(effect.getOnIncoming(), effect.getOnLeaving());
 	}
+
+	OSGi<T> effects(
+		Consumer<? super T> onAddedBefore, Consumer<? super T> onAddedAfter,
+		Consumer<? super T> onRemovedBefore,
+		Consumer<? super T> onRemovedAfter,
+		UpdateQuery<T> updateQuery);
 
 	OSGi<T> filter(Predicate<T> predicate);
 

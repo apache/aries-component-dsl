@@ -234,16 +234,13 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 		return effects(onAddedBefore, onAddedAfter, onRemovedBefore, onRemovedAfter, UpdateQuery.onUpdate());
 	}
 
+	@Override
 	public OSGi<T> effects(
 		Consumer<? super T> onAddedBefore, Consumer<? super T> onAddedAfter,
 		Consumer<? super T> onRemovedBefore,
 		Consumer<? super T> onRemovedAfter,
 		UpdateQuery<T> updateQuery) {
 
-		//TODO: logging
-		//TODO: logging
-		//TODO: logging
-		//TODO: logging
 		return new BaseOSGiImpl<>((executionContext, op) ->
 			run(
 				executionContext,
