@@ -22,7 +22,13 @@ import org.apache.aries.component.dsl.OSGi;
 import org.apache.aries.component.dsl.OSGiResult;
 import org.apache.aries.component.dsl.Publisher;
 import org.apache.aries.component.dsl.Utils;
+import org.apache.aries.component.dsl.configuration.ConfigurationHolder;
+import org.apache.aries.component.dsl.configuration.Configurations;
 import org.apache.aries.component.dsl.internal.ProbeImpl;
+import org.apache.aries.component.dsl.services.ServiceReferences;
+import org.apache.aries.component.dsl.update.UpdateQuery;
+import org.apache.aries.component.dsl.update.UpdateSelector;
+import org.apache.aries.component.dsl.update.UpdateTuple;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -54,6 +60,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.apache.aries.component.dsl.OSGi.*;
 import static org.apache.aries.component.dsl.Utils.accumulate;
 import static org.apache.aries.component.dsl.Utils.highest;
+import static org.apache.aries.component.dsl.configuration.ConfigurationHolder.fromMap;
+import static org.apache.aries.component.dsl.update.UpdateQuery.From.from;
+import static org.apache.aries.component.dsl.update.UpdateQuery.onUpdate;
+import static org.apache.aries.component.dsl.update.UpdateTuple.flatMap;
+import static org.apache.aries.component.dsl.update.UpdateTuple.fromStatic;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -470,6 +481,114 @@ public class DSLTest {
 
     @Test
     public void testCoalesceWithConfigurationUpdate()
+        throws IOException, InterruptedException {
+
+        ServiceReference<ConfigurationAdmin> serviceReference =
+            bundleContext.getServiceReference(ConfigurationAdmin.class);
+
+        ConfigurationAdmin configurationAdmin = bundleContext.getService(
+            serviceReference);
+
+        Configuration configuration = configurationAdmin.getConfiguration(
+            "test.configuration");
+
+        configuration.update(new Hashtable<>());
+
+        AtomicReference<Dictionary<?,?>> atomicReference =
+            new AtomicReference<>(null);
+
+        AtomicInteger counter = new AtomicInteger();
+        AtomicInteger updateCounter = new AtomicInteger();
+
+        CountDownLatch countDownLatch = new CountDownLatch(4);
+
+        ServiceRegistration<ManagedService> serviceRegistration =
+            bundleContext.registerService(
+                ManagedService.class, __ -> countDownLatch.countDown(),
+                new Hashtable<String, Object>() {{
+                    put("service.pid", "test.configuration");
+                }});
+
+        AtomicReference<Runnable> effect = new AtomicReference<>();
+
+        effect.set(countDownLatch::countDown);
+
+        try(OSGiResult result =
+                flatMap(coalesce(
+                    Configurations.singleton("test.configuration"),
+                    just(() -> fromStatic(fromMap(new HashMap<>())))),
+                (configurationUpdate, cholder) ->
+                    just(() -> cholder).
+                        effects(
+                        holder -> {
+                            atomicReference.set(holder.getUpdatedProperties());
+
+                            counter.incrementAndGet();
+
+                            effect.get().run();
+                        },
+                        __ -> {},
+                        __ -> {},
+                        __ -> {},
+                        onUpdate(
+                            from(configurationUpdate, holder -> {
+                                atomicReference.set(holder.getUpdatedProperties());
+
+                                updateCounter.incrementAndGet();
+
+                                effect.get().run();
+                            }))
+                    )).run(bundleContext))
+        {
+            configuration.update(
+                new Hashtable<String, Object>() {{
+                    put("property", "value");
+                }}
+            );
+
+            countDownLatch.await(10, TimeUnit.SECONDS);
+
+            assertEquals(1, counter.get());
+            assertEquals(1, updateCounter.get());
+
+            assertEquals("value", atomicReference.get().get("property"));
+
+            if (serviceRegistration != null) {
+                serviceRegistration.unregister();
+            }
+
+            CountDownLatch deleteLatch = new CountDownLatch(2);
+
+            effect.set(deleteLatch::countDown);
+
+            serviceRegistration =
+                bundleContext.registerService(
+                    ManagedService.class, __ -> deleteLatch.countDown(),
+                    new Hashtable<String, Object>() {{
+                        put("service.pid", "test.configuration");
+                    }});
+
+            configuration.delete();
+
+            deleteLatch.await(10, TimeUnit.SECONDS);
+
+            assertEquals(2, counter.get());
+            assertEquals(1, updateCounter.get());
+
+            assertTrue(atomicReference.get().isEmpty());
+        }
+        finally {
+            bundleContext.ungetService(serviceReference);
+
+            if (serviceRegistration != null) {
+                serviceRegistration.unregister();
+            }
+        }
+    }
+
+
+    @Test
+    public void testCoalesceWithConfigurationUpdateRefresh()
         throws IOException, InterruptedException {
 
         ServiceReference<ConfigurationAdmin> serviceReference =
@@ -1745,6 +1864,136 @@ public class DSLTest {
                 }});
 
             assertEquals(2, atomicInteger.get());
+        }
+        finally {
+            serviceRegistration.unregister();
+        }
+    }
+
+    @Test
+    public void testServiceReferenceUpdates() {
+        AtomicReference<String> atomicReference = new AtomicReference<>();
+
+        ServiceRegistration<Service> serviceRegistration =
+            bundleContext.registerService(
+                Service.class, new Service(),
+                new Hashtable<String, Object>() {{
+                    put("property", "original");
+                }});
+
+        AtomicInteger atomicInteger = new AtomicInteger();
+
+        try {
+            OSGi<?> program =
+                serviceReferences(
+                    Service.class,
+                    csr -> csr.getServiceReference().getProperty("property").equals("refresh")
+                ).effects(
+                    csr -> {
+                        atomicReference.set(
+                            String.valueOf(
+                                csr.getServiceReference().getProperty("property")));
+
+                        atomicInteger.incrementAndGet();
+                    },
+                    __ -> {},
+                    __ -> {},
+                    __ -> {},
+                    onUpdate(
+                        from(
+                            UpdateSelector.ALL,
+                            csr ->
+                                atomicReference.set(
+                                    String.valueOf(
+                                        csr.getServiceReference().getProperty("property"))))
+                    )
+                );
+
+            program.run(bundleContext);
+
+            assertEquals(1, atomicInteger.get());
+            assertEquals("original", atomicReference.get());
+
+            serviceRegistration.setProperties(
+                new Hashtable<String, Object>() {{
+                    put("property", "updated");
+                }});
+
+            assertEquals(1, atomicInteger.get());
+            assertEquals("updated", atomicReference.get());
+
+            serviceRegistration.setProperties(
+                new Hashtable<String, Object>() {{
+                    put("property", "refresh");
+                }});
+
+            assertEquals(2, atomicInteger.get());
+            assertEquals("refresh", atomicReference.get());
+        }
+        finally {
+            serviceRegistration.unregister();
+        }
+    }
+
+
+    @Test
+    public void testServiceReferenceUpdatesWithSelector() {
+        AtomicReference<String> atomicReference = new AtomicReference<>();
+
+        ServiceRegistration<Service> serviceRegistration =
+            bundleContext.registerService(
+                Service.class, new Service(),
+                new Hashtable<String, Object>() {{
+                    put("property", "original");
+                }});
+
+        AtomicInteger atomicInteger = new AtomicInteger();
+
+        try {
+            OSGi<?> program = UpdateTuple.flatMap(
+                refreshWhen(
+                    ServiceReferences.withUpdate(Service.class),
+                    (us, ut) -> ut.t.getServiceReference().getProperty("property").equals("refresh")
+                ),
+                (serviceUpdate, csr) ->
+                    effects(
+                    () -> {
+                        atomicReference.set(String.valueOf(csr.getServiceReference().getProperty("property")));
+
+                        atomicInteger.incrementAndGet();
+                    },
+                    () -> {},
+                    () -> {},
+                    () -> {},
+                    onUpdate(
+                        from(
+                            serviceUpdate,
+                            __ ->
+                                atomicReference.set(
+                                    String.valueOf(csr.getServiceReference().getProperty("property"))))
+                ))
+            );
+
+            program.run(bundleContext);
+
+            assertEquals(1, atomicInteger.get());
+            assertEquals("original", atomicReference.get());
+
+            serviceRegistration.setProperties(
+                new Hashtable<String, Object>() {{
+                    put("property", "updated");
+                }});
+
+            assertEquals(1, atomicInteger.get());
+            assertEquals("updated", atomicReference.get());
+
+            serviceRegistration.setProperties(
+                new Hashtable<String, Object>() {{
+                    put("property", "refresh");
+                }});
+
+            assertEquals(2, atomicInteger.get());
+            assertEquals("refresh", atomicReference.get());
         }
         finally {
             serviceRegistration.unregister();
