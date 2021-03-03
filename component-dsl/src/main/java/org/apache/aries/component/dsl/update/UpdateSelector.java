@@ -20,4 +20,6 @@ package org.apache.aries.component.dsl.update;
 public interface UpdateSelector {
 
     public static final UpdateSelector ALL = new UpdateSelector() {};
+
+    public static final UpdateSelector STATIC = new UpdateSelector() {};
 }

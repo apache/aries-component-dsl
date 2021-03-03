@@ -18,20 +18,43 @@
 package org.apache.aries.component.dsl.configuration;
 
 import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Map;
 
 public interface ConfigurationHolder {
 
-    String getPid();
-
     Dictionary<String, ?> getProperties();
 
-    String getFactoryPid();
-
     long getChangeCount();
-
-    void refresh();
 
     long getUpdatedChangeCount();
 
     Dictionary<String, ?> getUpdatedProperties();
+
+    public static ConfigurationHolder fromMap(Map<String, ?> map) {
+        return new ConfigurationHolder() {
+
+            final Hashtable<String, ?> properties = new Hashtable<>(map);
+
+            @Override
+            public Dictionary<String, ?> getProperties() {
+                return new Hashtable<>(properties);
+            }
+
+            @Override
+            public long getChangeCount() {
+                return 0;
+            }
+
+            @Override
+            public long getUpdatedChangeCount() {
+                return getChangeCount();
+            }
+
+            @Override
+            public Dictionary<String, ?> getUpdatedProperties() {
+                return getProperties();
+            }
+        };
+    }
 }

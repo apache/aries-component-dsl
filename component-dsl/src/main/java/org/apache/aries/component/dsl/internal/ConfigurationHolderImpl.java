@@ -27,16 +27,11 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ConfigurationHolderImpl implements ConfigurationHolder {
 
     private Configuration configuration;
-    private AtomicReference<Dictionary<String, ?>> properties;
+    private AtomicReference<Dictionary<String, ?>> properties = new AtomicReference<>();
     private AtomicLong changeCount = new AtomicLong(-1);
 
     public ConfigurationHolderImpl(Configuration configuration) {
         this.configuration = configuration;
-    }
-
-    @Override
-    public String getPid() {
-        return configuration.getPid();
     }
 
     @Override
@@ -47,22 +42,10 @@ public class ConfigurationHolderImpl implements ConfigurationHolder {
     }
 
     @Override
-    public String getFactoryPid() {
-        return configuration.getFactoryPid();
-    }
-
-    @Override
     public long getChangeCount() {
         changeCount.compareAndSet(-1, configuration.getChangeCount());
 
         return changeCount.get();
-    }
-
-    @Override
-    public void refresh() {
-        changeCount.set(-1);
-
-        properties.set(null);
     }
 
     @Override

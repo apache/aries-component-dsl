@@ -17,6 +17,10 @@
 
 package org.apache.aries.component.dsl.update;
 
+import org.apache.aries.component.dsl.OSGi;
+
+import java.util.function.BiFunction;
+
 public final class UpdateTuple<T> {
 
     public final UpdateSelector updateSelector;
@@ -30,4 +34,15 @@ public final class UpdateTuple<T> {
     public T getT() {
         return t;
     }
+
+    public static <S, R> OSGi<R> flatMap(
+        OSGi<UpdateTuple<S>> tuple, BiFunction<UpdateSelector, S, OSGi<R>> biFunction) {
+
+        return tuple.flatMap(updateTuple -> biFunction.apply(updateTuple.updateSelector, updateTuple.t));
+    }
+
+    public static <T> UpdateTuple<T> fromStatic(T t) {
+        return new UpdateTuple<>(UpdateSelector.STATIC, t);
+    }
+
 }
