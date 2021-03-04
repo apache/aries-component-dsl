@@ -19,8 +19,6 @@ package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
 import org.apache.aries.component.dsl.configuration.ConfigurationHolder;
-import org.apache.aries.component.dsl.update.UpdateSelector;
-import org.apache.aries.component.dsl.update.UpdateTuple;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -39,7 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * @author Carlos Sierra Andrés
  */
-public class ConfigurationOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHolder>> {
+public class ConfigurationOSGiImpl extends OSGiImpl<ConfigurationHolder> {
 
 	public ConfigurationOSGiImpl(String pid) {
 		super((executionContext, op) -> {
@@ -48,11 +46,9 @@ public class ConfigurationOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHol
 
 			AtomicReference<OSGiResult>
 				terminatorAtomicReference = new AtomicReference<>(
-					new OSGiResultImpl(NOOP, __ -> false));
+					new OSGiResultImpl(NOOP, () -> false));
 
 			AtomicBoolean closed = new AtomicBoolean();
-
-			UpdateSelector updateSelector = new UpdateSelector() {};
 
 			AtomicLong initialCounter = new AtomicLong();
 
@@ -100,7 +96,7 @@ public class ConfigurationOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHol
 								atomicReference.set(configuration);
 							}
 							else {
-								if (!terminatorAtomicReference.get().update(updateSelector)) {
+								if (!terminatorAtomicReference.get().update()) {
 									return;
 								}
 							}
@@ -109,10 +105,7 @@ public class ConfigurationOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHol
 								signalLeave(terminatorAtomicReference);
 
 								terminatorAtomicReference.set(
-									op.apply(
-										new UpdateTuple<>(
-											updateSelector,
-											new ConfigurationHolderImpl(configuration))));
+									op.apply(new ConfigurationHolderImpl(configuration)));
 
 							});
 
@@ -141,10 +134,7 @@ public class ConfigurationOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHol
                     initialCounter.set(configuration.getChangeCount());
 
                     terminatorAtomicReference.set(
-                        op.apply(
-                        	new UpdateTuple<>(
-                        		updateSelector,
-								new ConfigurationHolderImpl(configuration))));
+                        op.apply(new ConfigurationHolderImpl(configuration)));
                 }
 			}
 
@@ -158,7 +148,7 @@ public class ConfigurationOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHol
 
 					signalLeave(terminatorAtomicReference);
 				},
-				us -> terminatorAtomicReference.get().update(us))
+				() -> terminatorAtomicReference.get().update())
 			;
 		});
 	}

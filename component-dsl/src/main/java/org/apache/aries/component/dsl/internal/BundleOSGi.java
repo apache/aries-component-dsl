@@ -18,7 +18,6 @@
 package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
-import org.apache.aries.component.dsl.update.UpdateSelector;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.util.tracker.BundleTracker;
@@ -31,7 +30,6 @@ public class BundleOSGi extends OSGiImpl<Bundle> {
 
 	public BundleOSGi(int stateMask) {
 		super((executionContext, op) -> {
-			UpdateSelector updateSelector = new UpdateSelector() {};
 
 			BundleTracker<OSGiResult> bundleTracker =
 				new BundleTracker<>(
@@ -50,7 +48,7 @@ public class BundleOSGi extends OSGiImpl<Bundle> {
 							Bundle bundle, BundleEvent bundleEvent,
 							OSGiResult osgiResult) {
 
-							osgiResult.update(updateSelector);
+							osgiResult.update();
 						}
 
 						@Override
@@ -66,8 +64,8 @@ public class BundleOSGi extends OSGiImpl<Bundle> {
 
 			return new OSGiResultImpl(
 				bundleTracker::close,
-				us -> bundleTracker.getTracked().values().stream().map(
-					result -> result.update(us)
+				() -> bundleTracker.getTracked().values().stream().map(
+					OSGiResult::update
 				).reduce(
 					Boolean.FALSE, Boolean::logicalOr
 				)

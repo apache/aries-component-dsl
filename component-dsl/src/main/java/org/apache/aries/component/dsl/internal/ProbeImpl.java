@@ -45,7 +45,7 @@ public class ProbeImpl<T> extends BaseOSGiImpl<T> {
 
             return new OSGiResultImpl(
                 () -> {_onClose.close(); _onClose = NOOP;},
-                us -> _onClose.update(us)
+                () -> _onClose.update()
             );
         }
 

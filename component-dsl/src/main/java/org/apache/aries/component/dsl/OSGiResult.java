@@ -17,8 +17,6 @@
 
 package org.apache.aries.component.dsl;
 
-import org.apache.aries.component.dsl.update.UpdateSelector;
-
 /**
  * @author Carlos Sierra Andrés
  */
@@ -31,7 +29,7 @@ public interface OSGiResult extends AutoCloseable, Runnable {
 		close();
 	}
 
-	public default boolean update(UpdateSelector updateSelector) {
+	public default boolean update() {
 		return false;
 	};
 

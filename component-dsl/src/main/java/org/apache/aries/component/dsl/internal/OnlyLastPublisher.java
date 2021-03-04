@@ -68,7 +68,7 @@ public class OnlyLastPublisher<T> implements Publisher<T> {
                         }
                     }
                 },
-                us -> _terminator.update(us)
+                () -> _terminator.update()
             );
         }
     }

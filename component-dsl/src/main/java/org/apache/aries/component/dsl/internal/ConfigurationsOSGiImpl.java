@@ -19,8 +19,6 @@ package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
 import org.apache.aries.component.dsl.configuration.ConfigurationHolder;
-import org.apache.aries.component.dsl.update.UpdateSelector;
-import org.apache.aries.component.dsl.update.UpdateTuple;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -29,7 +27,6 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
 
-import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -39,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author Carlos Sierra Andrés
  */
-public class ConfigurationsOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHolder>> {
+public class ConfigurationsOSGiImpl extends OSGiImpl<ConfigurationHolder> {
 
 	public ConfigurationsOSGiImpl(String factoryPid) {
 		super((executionContext, op) -> {
@@ -50,8 +47,6 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHo
 				new ConcurrentHashMap<>();
 
 			AtomicBoolean closed = new AtomicBoolean();
-
-			UpdateSelector updateSelector = new UpdateSelector() {};
 
 			CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -100,7 +95,7 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHo
 
 								OSGiResult osgiResult = terminators.get(pid);
 
-								if (osgiResult != null && !osgiResult.update(updateSelector)) {
+								if (osgiResult != null && !osgiResult.update()) {
 									return;
 								}
 							}
@@ -109,10 +104,7 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHo
 								signalLeave(pid, terminators);
 
 								terminators.put(
-									pid, op.apply(
-										new UpdateTuple<>(
-											updateSelector,
-											new ConfigurationHolderImpl(configuration))));
+									pid, op.apply(new ConfigurationHolderImpl(configuration)));
 							});
 
 							if (closed.get()) {
@@ -140,10 +132,7 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHo
 
 					terminators.put(
 						configuration.getPid(),
-						op.publish(
-							new UpdateTuple<>(
-								updateSelector,
-								new ConfigurationHolderImpl(configuration))));
+						op.publish(new ConfigurationHolderImpl(configuration)));
 				}
 			}
 
@@ -161,8 +150,8 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<UpdateTuple<ConfigurationHo
 						}
 					}
 				},
-				us -> terminators.values().stream().map(
-					osgiResult -> osgiResult.update(us)
+				() -> terminators.values().stream().map(
+					OSGiResult::update
 				).reduce(
 					Boolean.FALSE, Boolean::logicalOr
 				));

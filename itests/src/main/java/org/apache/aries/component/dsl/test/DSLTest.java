@@ -22,13 +22,9 @@ import org.apache.aries.component.dsl.OSGi;
 import org.apache.aries.component.dsl.OSGiResult;
 import org.apache.aries.component.dsl.Publisher;
 import org.apache.aries.component.dsl.Utils;
-import org.apache.aries.component.dsl.configuration.ConfigurationHolder;
 import org.apache.aries.component.dsl.configuration.Configurations;
 import org.apache.aries.component.dsl.internal.ProbeImpl;
 import org.apache.aries.component.dsl.services.ServiceReferences;
-import org.apache.aries.component.dsl.update.UpdateQuery;
-import org.apache.aries.component.dsl.update.UpdateSelector;
-import org.apache.aries.component.dsl.update.UpdateTuple;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -61,10 +57,6 @@ import static org.apache.aries.component.dsl.OSGi.*;
 import static org.apache.aries.component.dsl.Utils.accumulate;
 import static org.apache.aries.component.dsl.Utils.highest;
 import static org.apache.aries.component.dsl.configuration.ConfigurationHolder.fromMap;
-import static org.apache.aries.component.dsl.update.UpdateQuery.From.from;
-import static org.apache.aries.component.dsl.update.UpdateQuery.onUpdate;
-import static org.apache.aries.component.dsl.update.UpdateTuple.flatMap;
-import static org.apache.aries.component.dsl.update.UpdateTuple.fromStatic;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -514,12 +506,10 @@ public class DSLTest {
         effect.set(countDownLatch::countDown);
 
         try(OSGiResult result =
-                flatMap(coalesce(
+                coalesce(
                     Configurations.singleton("test.configuration"),
-                    just(() -> fromStatic(fromMap(new HashMap<>())))),
-                (configurationUpdate, cholder) ->
-                    just(() -> cholder).
-                        effects(
+                    just(fromMap(new HashMap<>())))
+                .effects(
                         holder -> {
                             atomicReference.set(holder.getUpdatedProperties());
 
@@ -530,16 +520,16 @@ public class DSLTest {
                         __ -> {},
                         __ -> {},
                         __ -> {},
-                        onUpdate(
-                            from(configurationUpdate, holder -> {
+                        holder -> {
                                 atomicReference.set(holder.getUpdatedProperties());
 
                                 updateCounter.incrementAndGet();
 
                                 effect.get().run();
-                            }))
-                    )).run(bundleContext))
-        {
+                            }
+                    )
+                .run(bundleContext)
+        ) {
             configuration.update(
                 new Hashtable<String, Object>() {{
                     put("property", "value");
@@ -1899,14 +1889,10 @@ public class DSLTest {
                     __ -> {},
                     __ -> {},
                     __ -> {},
-                    onUpdate(
-                        from(
-                            UpdateSelector.ALL,
-                            csr ->
-                                atomicReference.set(
-                                    String.valueOf(
-                                        csr.getServiceReference().getProperty("property"))))
-                    )
+                    csr ->
+                        atomicReference.set(
+                            String.valueOf(
+                                csr.getServiceReference().getProperty("property")))
                 );
 
             program.run(bundleContext);
@@ -1950,28 +1936,21 @@ public class DSLTest {
         AtomicInteger atomicInteger = new AtomicInteger();
 
         try {
-            OSGi<?> program = UpdateTuple.flatMap(
-                refreshWhen(
+            OSGi<?> program = refreshWhen(
                     ServiceReferences.withUpdate(Service.class),
-                    (us, ut) -> ut.t.getServiceReference().getProperty("property").equals("refresh")
-                ),
-                (serviceUpdate, csr) ->
-                    effects(
-                    () -> {
-                        atomicReference.set(String.valueOf(csr.getServiceReference().getProperty("property")));
+                    csr -> csr.getServiceReference().getProperty("property").equals("refresh")
+            ).effects(
+                csr -> {
+                    atomicReference.set(String.valueOf(csr.getServiceReference().getProperty("property")));
 
-                        atomicInteger.incrementAndGet();
-                    },
-                    () -> {},
-                    () -> {},
-                    () -> {},
-                    onUpdate(
-                        from(
-                            serviceUpdate,
-                            __ ->
-                                atomicReference.set(
-                                    String.valueOf(csr.getServiceReference().getProperty("property"))))
-                ))
+                    atomicInteger.incrementAndGet();
+                },
+                __ -> {},
+                __ -> {},
+                __ -> {},
+                csr ->
+                    atomicReference.set(
+                        String.valueOf(csr.getServiceReference().getProperty("property")))
             );
 
             program.run(bundleContext);

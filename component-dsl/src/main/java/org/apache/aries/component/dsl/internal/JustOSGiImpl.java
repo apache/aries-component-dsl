@@ -55,7 +55,7 @@ public class JustOSGiImpl<T> extends OSGiImpl<T> {
 
 			return new OSGiResultImpl(
 				() -> cleanUp(references),
-				us -> references.stream().map(res -> res.update(us)).reduce(Boolean.FALSE, Boolean::logicalOr)
+				() -> references.stream().map(res -> res.update()).reduce(Boolean.FALSE, Boolean::logicalOr)
 			);
 		});
 	}

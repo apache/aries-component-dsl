@@ -21,7 +21,6 @@ import org.apache.aries.component.dsl.OSGi;
 import org.apache.aries.component.dsl.OSGiResult;
 import org.apache.aries.component.dsl.OSGiRunnable.ExecutionContext;
 import org.apache.aries.component.dsl.Publisher;
-import org.apache.aries.component.dsl.update.UpdateSelector;
 
 import java.util.function.Function;
 
@@ -56,8 +55,8 @@ public class Pad<T, S> implements Publisher<T>, OSGiResult {
     }
 
     @Override
-    public boolean update(UpdateSelector updateSelector) {
-        return _result.update(updateSelector);
+    public boolean update() {
+        return _result.update();
     }
 
     @Override

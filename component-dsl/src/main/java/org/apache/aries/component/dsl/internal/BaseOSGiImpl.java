@@ -18,8 +18,6 @@
 package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.*;
-import org.apache.aries.component.dsl.update.UpdateQuery;
-import org.apache.aries.component.dsl.update.UpdateSelector;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 
@@ -134,12 +132,12 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 									});
 								}
 							},
-							us -> {
+							() -> {
 								synchronized (identities) {
 									return identities.stream().map(t -> {
 										OSGiResult terminator = terminators.get(t).get(f);
 
-										return terminator.update(us);
+										return terminator.update();
 									}).reduce(
 										Boolean.FALSE, Boolean::logicalOr
 									);
@@ -175,12 +173,12 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 									});
 								}
 							},
-							us -> {
+							() -> {
 								synchronized (identities) {
 									return functions.stream().map(f -> {
 										OSGiResult terminator = terminators.get(t).get(f);
 
-										return terminator.update(us);
+										return terminator.update();
 									}).reduce(
 										Boolean.FALSE, Boolean::logicalOr
 									);
@@ -231,7 +229,7 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 		Consumer<? super T> onRemovedBefore,
 		Consumer<? super T> onRemovedAfter) {
 
-		return effects(onAddedBefore, onAddedAfter, onRemovedBefore, onRemovedAfter, UpdateQuery.onUpdate());
+		return effects(onAddedBefore, onAddedAfter, onRemovedBefore, onRemovedAfter, __ -> {});
 	}
 
 	@Override
@@ -239,7 +237,7 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 		Consumer<? super T> onAddedBefore, Consumer<? super T> onAddedAfter,
 		Consumer<? super T> onRemovedBefore,
 		Consumer<? super T> onRemovedAfter,
-		UpdateQuery<T> updateQuery) {
+		Consumer<? super T> onUpdate) {
 
 		return new BaseOSGiImpl<>((executionContext, op) ->
 			run(
@@ -272,16 +270,10 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 								//TODO: logging
 							}
 						},
-							us -> {
-								UpdateQuery.From<T>[] froms = updateQuery.froms;
+							() -> {
+								onUpdate.accept(t);
 
-								for (UpdateQuery.From<T> from : froms) {
-									if (from.selector == us || from.selector == UpdateSelector.ALL) {
-										from.consumer.accept(t);
-									}
-								}
-
-								return terminator.update(us);
+								return terminator.update();
 							}
 						);
 
@@ -397,11 +389,11 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 
 					result.close();
 				},
-				us -> pads.values().stream().map(
-					pad -> pad.update(us)
+				() -> pads.values().stream().map(
+					Pad::update
 				).reduce(
 					Boolean.FALSE, Boolean::logicalOr
-				) | result.update(us)
+				) | result.update()
 			);
 		});
 	}

@@ -45,16 +45,12 @@ import org.apache.aries.component.dsl.function.Function26;
 import org.apache.aries.component.dsl.function.Function3;
 import org.apache.aries.component.dsl.function.Function5;
 import org.apache.aries.component.dsl.function.Function7;
-import org.apache.aries.component.dsl.update.UpdateQuery;
-import org.apache.aries.component.dsl.update.UpdateSelector;
-import org.apache.aries.component.dsl.update.UpdateTuple;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.Configuration;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -294,9 +290,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	static OSGi<Dictionary<String, ?>> configuration(String pid) {
 		return refreshWhen(
 			new ConfigurationOSGiImpl(pid),
-			(__, ___) -> true
-		).map(
-			UpdateTuple::getT
+			__ -> true
 		).map(
 			ConfigurationHolder::getUpdatedProperties
 		);
@@ -305,9 +299,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	static OSGi<Dictionary<String, ?>> configurations(String factoryPid) {
 		return refreshWhen(
 			new ConfigurationsOSGiImpl(factoryPid),
-			(__, ___) -> true
-		).map(
-			UpdateTuple::getT
+			__ -> true
 		).map(
 			ConfigurationHolder::getUpdatedProperties
 		);
@@ -319,11 +311,11 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 			NOOP,
 			NOOP,
 			() -> effect.getOnLeaving().accept(null),
-			UpdateQuery.onUpdate());
+			NOOP);
 	}
 
 	static OSGi<Void> effects(Runnable onAdding, Runnable onRemoving) {
-		return new EffectsOSGi(onAdding, NOOP, NOOP, onRemoving, UpdateQuery.onUpdate());
+		return new EffectsOSGi(onAdding, NOOP, NOOP, onRemoving, NOOP);
 	}
 
 	static OSGi<Void> effects(
@@ -332,24 +324,24 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 
 		return new EffectsOSGi(
 			onAddingBefore, onAddingAfter, onRemovingBefore, onRemovingAfter,
-			UpdateQuery.onUpdate());
+			NOOP);
 	}
 
 	static OSGi<Void> effects(
 		Runnable onAddingBefore, Runnable onAddingAfter,
-		Runnable onRemovingBefore, Runnable onRemovingAfter, UpdateQuery<Void> updateQuery) {
+		Runnable onRemovingBefore, Runnable onRemovingAfter, Runnable onUpdate) {
 
 		return new EffectsOSGi(
-			onAddingBefore, onAddingAfter, onRemovingBefore, onRemovingAfter, updateQuery);
+			onAddingBefore, onAddingAfter, onRemovingBefore, onRemovingAfter, onUpdate);
 	}
 
 	static <T> OSGi<T> fromOsgiRunnable(OSGiRunnable<T> runnable) {
 		return getOsgiFactory().create(
-			(ec, op) -> new OSGiResultImpl(runnable.run(ec, op), __ -> true));
+			(ec, op) -> new OSGiResultImpl(runnable.run(ec, op), () -> true));
 	}
 
 	static <T> OSGi<T> fromOsgiRunnableWithUpdateSupport(OSGiRunnable<T> runnable) {
-		return getOsgiFactory().create(runnable::run);
+		return getOsgiFactory().create(runnable);
 	}
 
 	static OSGiFactory getOsgiFactory() {
@@ -467,7 +459,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		return new RecoverWithOSGi<>(program, function);
 	}
 
-	static <T> OSGi<T> refreshWhen(OSGi<T> program, BiPredicate<UpdateSelector, T> refresher) {
+	static <T> OSGi<T> refreshWhen(OSGi<T> program, Predicate<T> refresher) {
 		return new RefreshWhenOSGi<>(program, refresher);
 	}
 
@@ -547,19 +539,19 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	static <T> OSGi<CachingServiceReference<T>> serviceReferences(
 		Class<T> clazz) {
 
-		return new ServiceReferenceOSGi<>(null, clazz).map(UpdateTuple::getT);
+		return new ServiceReferenceOSGi<>(null, clazz);
 	}
 
 	static OSGi<CachingServiceReference<Object>> serviceReferences(
 		String filterString) {
 
-		return new ServiceReferenceOSGi<>(filterString, null).map(UpdateTuple::getT);
+		return new ServiceReferenceOSGi<>(filterString, null);
 	}
 
 	static <T> OSGi<CachingServiceReference<T>> serviceReferences(
 		Class<T> clazz, String filterString) {
 
-		return new ServiceReferenceOSGi<>(filterString, clazz).map(UpdateTuple::getT);
+		return new ServiceReferenceOSGi<>(filterString, clazz);
 	}
 
 	static <T> OSGi<CachingServiceReference<T>> serviceReferences(
@@ -568,7 +560,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 
 		return refreshWhen(
 			serviceReferences(clazz, filterString),
-			(__, csr) -> onModified.test(csr));
+			onModified::test);
 
 	}
 
@@ -578,7 +570,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 
 		return refreshWhen(
 			serviceReferences(clazz, (String)null),
-			(__, csr) -> onModified.test(csr));
+			onModified::test);
 	}
 
 	static OSGi<CachingServiceReference<Object>> serviceReferences(
@@ -587,7 +579,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 
 		return refreshWhen(
 			serviceReferences(null, filterString),
-			(__, csr) -> onModified.test(csr));
+			onModified::test);
 	}
 
 	static <T> OSGi<T> services(Class<T> clazz) {
@@ -644,7 +636,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		Consumer<? super T> onAddedBefore, Consumer<? super T> onAddedAfter,
 		Consumer<? super T> onRemovedBefore,
 		Consumer<? super T> onRemovedAfter,
-		UpdateQuery<T> updateQuery);
+		Consumer<? super T> onUpdate);
 
 	OSGi<T> filter(Predicate<T> predicate);
 

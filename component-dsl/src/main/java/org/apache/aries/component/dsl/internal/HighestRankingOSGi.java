@@ -93,11 +93,11 @@ public class HighestRankingOSGi<T> extends OSGiImpl<T> {
                                 }
                             }
                         },
-                        us -> {
+                        () -> {
                             synchronized (set) {
                                 Tuple<T> current = set.peek();
 
-                                return current.osgiResult.update(us);
+                                return current.osgiResult.update();
                             }
                         }
                     );

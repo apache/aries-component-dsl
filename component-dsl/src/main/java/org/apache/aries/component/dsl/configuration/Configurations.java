@@ -20,15 +20,14 @@ package org.apache.aries.component.dsl.configuration;
 import org.apache.aries.component.dsl.OSGi;
 import org.apache.aries.component.dsl.internal.ConfigurationOSGiImpl;
 import org.apache.aries.component.dsl.internal.ConfigurationsOSGiImpl;
-import org.apache.aries.component.dsl.update.UpdateTuple;
 
 public interface Configurations {
 
-    public static OSGi<UpdateTuple<ConfigurationHolder>> singleton(String pid) {
+    public static OSGi<ConfigurationHolder> singleton(String pid) {
         return new ConfigurationOSGiImpl(pid);
     }
 
-    public static OSGi<UpdateTuple<ConfigurationHolder>> factories(String pid) {
+    public static OSGi<ConfigurationHolder> factories(String pid) {
         return new ConfigurationsOSGiImpl(pid);
     }
 

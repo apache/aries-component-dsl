@@ -18,8 +18,6 @@
 package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
-import org.apache.aries.component.dsl.update.UpdateQuery;
-import org.apache.aries.component.dsl.update.UpdateSelector;
 
 /**
  * @author Carlos Sierra Andrés
@@ -28,7 +26,7 @@ public class EffectsOSGi extends OSGiImpl<Void> {
 
     public EffectsOSGi(
         Runnable onAddingBefore, Runnable onAddingAfter,
-        Runnable onRemovingBefore, Runnable onRemovingAfter, UpdateQuery<Void> updateQuery) {
+        Runnable onRemovingBefore, Runnable onRemovingAfter, Runnable onUpdate) {
 
         super((executionContext, op) -> {
             onAddingBefore.run();
@@ -59,16 +57,10 @@ public class EffectsOSGi extends OSGiImpl<Void> {
                             //TODO: logging
                         }
                     },
-                    us -> {
-                        UpdateQuery.From<Void>[] froms = updateQuery.froms;
+                    () -> {
+                        onUpdate.run();
 
-                        for (UpdateQuery.From<Void> from : froms) {
-                            if (from.selector == us || from.selector == UpdateSelector.ALL) {
-                                from.consumer.accept(null);
-                            }
-                        }
-
-                        return terminator.update(us);
+                        return terminator.update();
                     }
                 );
 

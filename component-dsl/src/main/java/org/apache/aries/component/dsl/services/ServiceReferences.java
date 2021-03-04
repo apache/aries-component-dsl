@@ -20,23 +20,22 @@ package org.apache.aries.component.dsl.services;
 import org.apache.aries.component.dsl.CachingServiceReference;
 import org.apache.aries.component.dsl.OSGi;
 import org.apache.aries.component.dsl.internal.ServiceReferenceOSGi;
-import org.apache.aries.component.dsl.update.UpdateTuple;
 
 public interface ServiceReferences {
 
-    static <T> OSGi<UpdateTuple<CachingServiceReference<T>>> withUpdate(
+    static <T> OSGi<CachingServiceReference<T>> withUpdate(
         Class<T> clazz) {
 
         return new ServiceReferenceOSGi<>(null, clazz);
     }
 
-    static OSGi<UpdateTuple<CachingServiceReference<Object>>> withUpdate(
+    static OSGi<CachingServiceReference<Object>> withUpdate(
         String filterString) {
 
         return new ServiceReferenceOSGi<>(filterString, null);
     }
 
-    static <T> OSGi<UpdateTuple<CachingServiceReference<T>>> withUpdate(
+    static <T> OSGi<CachingServiceReference<T>> withUpdate(
         Class<T> clazz, String filterString) {
 
         return new ServiceReferenceOSGi<>(filterString, clazz);

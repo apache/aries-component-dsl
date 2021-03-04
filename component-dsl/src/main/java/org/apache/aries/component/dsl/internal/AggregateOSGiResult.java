@@ -18,7 +18,6 @@
 package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
-import org.apache.aries.component.dsl.update.UpdateSelector;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -46,13 +45,13 @@ public class AggregateOSGiResult implements OSGiResult {
     }
 
     @Override
-    public boolean update(UpdateSelector updateSelector) {
+    public boolean update() {
         boolean bool = false;
 
         if (!_closed.get()) {
             for (OSGiResult result : results) {
                 try {
-                    bool |= result.update(updateSelector);
+                    bool |= result.update();
                 } catch (Exception e) {
                 }
             }

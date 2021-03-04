@@ -19,14 +19,7 @@ package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGi;
 import org.apache.aries.component.dsl.OSGiResult;
-import org.apache.aries.component.dsl.Publisher;
-import org.apache.aries.component.dsl.Refresher;
-import org.apache.aries.component.dsl.update.UpdateSelector;
-import org.apache.aries.component.dsl.update.UpdateTuple;
 
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /**
@@ -34,7 +27,7 @@ import java.util.function.Predicate;
  */
 public class RefreshWhenOSGi<T> extends OSGiImpl<T> {
 
-    public RefreshWhenOSGi(OSGi<T> program, BiPredicate<UpdateSelector, T> refresher) {
+    public RefreshWhenOSGi(OSGi<T> program, Predicate<T> refresher) {
         super((executionContext, op) -> program.run(
             executionContext,
             op.pipe(
@@ -43,12 +36,12 @@ public class RefreshWhenOSGi<T> extends OSGiImpl<T> {
 
                     return new OSGiResultImpl(
                         osgiResult::close,
-                        us -> {
-                            if (refresher.test(us, t)) {
+                        () -> {
+                            if (refresher.test(t)) {
                                 return true;
                             }
 
-                            return osgiResult.update(us);
+                            return osgiResult.update();
                         }
                     );
                 }

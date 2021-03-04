@@ -95,9 +95,9 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
                             }
                         }
                     }),
-                    us -> {
+                    () -> {
                         synchronized (initialized) {
-                            return result.get().update(us);
+                            return result.get().update();
                         }
                     });
                 };
@@ -130,10 +130,10 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
                         }
                     }
                 },
-                us -> {
+                () -> {
                     synchronized (initialized) {
                         return Arrays.stream(results).map(
-                            res -> res.update(us)
+                            res -> res.update()
                         ).reduce(
                             Boolean.FALSE, Boolean::logicalOr
                         );
