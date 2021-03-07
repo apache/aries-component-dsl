@@ -336,11 +336,6 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	}
 
 	static <T> OSGi<T> fromOsgiRunnable(OSGiRunnable<T> runnable) {
-		return getOsgiFactory().create(
-			(ec, op) -> new OSGiResultImpl(runnable.run(ec, op), () -> true));
-	}
-
-	static <T> OSGi<T> fromOsgiRunnableWithUpdateSupport(OSGiRunnable<T> runnable) {
 		return getOsgiFactory().create(runnable);
 	}
 
