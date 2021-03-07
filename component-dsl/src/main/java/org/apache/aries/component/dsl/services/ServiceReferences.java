@@ -26,19 +26,19 @@ public interface ServiceReferences {
     static <T> OSGi<CachingServiceReference<T>> withUpdate(
         Class<T> clazz) {
 
-        return new ServiceReferenceOSGi<>(null, clazz);
+        return new ServiceReferenceOSGi<>(clazz, null);
     }
 
     static OSGi<CachingServiceReference<Object>> withUpdate(
         String filterString) {
 
-        return new ServiceReferenceOSGi<>(filterString, null);
+        return new ServiceReferenceOSGi<>(null, filterString);
     }
 
     static <T> OSGi<CachingServiceReference<T>> withUpdate(
         Class<T> clazz, String filterString) {
 
-        return new ServiceReferenceOSGi<>(filterString, clazz);
+        return new ServiceReferenceOSGi<>(clazz, filterString);
     }
 
 }

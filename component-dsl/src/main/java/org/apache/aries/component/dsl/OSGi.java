@@ -534,19 +534,20 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	static <T> OSGi<CachingServiceReference<T>> serviceReferences(
 		Class<T> clazz) {
 
-		return new ServiceReferenceOSGi<>(null, clazz);
+		return serviceReferences(clazz, (String)null);
 	}
 
 	static OSGi<CachingServiceReference<Object>> serviceReferences(
 		String filterString) {
 
-		return new ServiceReferenceOSGi<>(filterString, null);
+		return serviceReferences(null, filterString);
 	}
 
 	static <T> OSGi<CachingServiceReference<T>> serviceReferences(
 		Class<T> clazz, String filterString) {
 
-		return new ServiceReferenceOSGi<>(filterString, clazz);
+		return serviceReferences(
+			clazz, filterString, CachingServiceReference::isDirty);
 	}
 
 	static <T> OSGi<CachingServiceReference<T>> serviceReferences(
@@ -554,7 +555,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		Refresher<? super CachingServiceReference<T>> onModified) {
 
 		return refreshWhen(
-			serviceReferences(clazz, filterString),
+			new ServiceReferenceOSGi<>(clazz, filterString),
 			onModified::test);
 
 	}

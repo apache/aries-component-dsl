@@ -30,7 +30,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 public class ServiceReferenceOSGi<T>
 	extends OSGiImpl<CachingServiceReference<T>> {
 
-	public ServiceReferenceOSGi(String filterString, Class<T> clazz) {
+	public ServiceReferenceOSGi(Class<T> clazz, String filterString) {
 
 		super((executionContext, op) -> {
 			ServiceTracker<T, Tracked<T>>
