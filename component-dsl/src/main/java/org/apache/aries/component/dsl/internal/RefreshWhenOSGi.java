@@ -28,24 +28,28 @@ import java.util.function.Predicate;
 public class RefreshWhenOSGi<T> extends OSGiImpl<T> {
 
     public RefreshWhenOSGi(OSGi<T> program, Predicate<T> refresher) {
-        super((executionContext, op) -> program.run(
-            executionContext,
-            op.pipe(
-                t -> {
-                    OSGiResult osgiResult = op.publish(t);
+        super((executionContext, op) -> {
+            OSGiResult result = program.run(
+                executionContext,
+                op.pipe(
+                    t -> {
+                        OSGiResult osgiResult = op.publish(t);
 
-                    return new OSGiResultImpl(
-                        osgiResult::close,
-                        () -> {
-                            if (refresher.test(t)) {
-                                return true;
+                        return new OSGiResultImpl(
+                            osgiResult::close,
+                            () -> {
+                                if (refresher.test(t)) {
+                                    return true;
+                                }
+
+                                return osgiResult.update();
                             }
+                        );
+                    }
+                ));
 
-                            return osgiResult.update();
-                        }
-                    );
-                }
-            )));
+            return new OSGiResultImpl(result::close, () -> false);
+        });
     }
 
 }
