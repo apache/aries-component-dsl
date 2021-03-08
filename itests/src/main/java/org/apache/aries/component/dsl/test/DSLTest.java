@@ -2202,6 +2202,92 @@ public class DSLTest {
 
         assertEquals(maps, gone);
     }
+
+    @Test
+    public void testUpdateEffectsOrder() {
+        ArrayList<String> updateEffects = new ArrayList<>();
+
+        ServiceRegistration<Service> serviceRegistration =
+            bundleContext.registerService(
+                Service.class, new Service(),
+                new Hashtable<String, Object>() {{
+                    put("property", "original");
+                }});
+
+        try {
+            OSGi<?> program =
+                serviceReferences(
+                    Service.class, __ -> false
+                ).effects(
+                    __ -> {},
+                    __ -> {},
+                    __ -> updateEffects.add("first")
+                ).effects(
+                    __ -> {},
+                    __ -> {},
+                    __ -> updateEffects.add("second")
+                );
+
+            program.run(bundleContext);
+
+            assertEquals(Collections.emptyList(), updateEffects);
+
+            serviceRegistration.setProperties(
+                new Hashtable<String, Object>() {{
+                    put("property", "updated");
+                }});
+
+            assertEquals(Arrays.asList("first", "second"), updateEffects);
+        }
+        finally {
+            serviceRegistration.unregister();
+        }
+    }
+
+    @Test
+    public void testUpdateEffectsAreOnlyExecutedWhenNoRefresh() {
+        ArrayList<String> updateEffects = new ArrayList<>();
+
+        ServiceRegistration<Service> serviceRegistration =
+            bundleContext.registerService(
+                Service.class, new Service(),
+                new Hashtable<String, Object>() {{
+                    put("property", "original");
+                }});
+
+        try {
+            OSGi<?> program =
+                refreshWhen(
+                    serviceReferences(
+                        Service.class, __ -> false
+                    ).effects(
+                        __ -> {},
+                        __ -> {},
+                        __ -> updateEffects.add("first")
+                    ).effects(
+                        __ -> {},
+                        __ -> {},
+                        __ -> updateEffects.add("second")
+                    ),
+                    __ -> true
+                );
+
+            program.run(bundleContext);
+
+            assertEquals(Collections.emptyList(), updateEffects);
+
+            serviceRegistration.setProperties(
+                new Hashtable<String, Object>() {{
+                    put("property", "updated");
+                }});
+
+            assertEquals(Collections.emptyList(), updateEffects);
+        }
+        finally {
+            serviceRegistration.unregister();
+        }
+    }
+
     static BundleContext bundleContext = FrameworkUtil.getBundle(
         DSLTest.class).getBundleContext();
 

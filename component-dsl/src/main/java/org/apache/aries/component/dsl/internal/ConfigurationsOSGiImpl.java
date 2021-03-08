@@ -95,7 +95,7 @@ public class ConfigurationsOSGiImpl extends OSGiImpl<ConfigurationHolder> {
 
 								OSGiResult osgiResult = terminators.get(pid);
 
-								if (osgiResult != null && !osgiResult.update()) {
+								if (osgiResult != null && !UpdateSupport.sendUpdate(osgiResult)) {
 									return;
 								}
 							}

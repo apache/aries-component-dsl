@@ -96,7 +96,7 @@ public class ConfigurationOSGiImpl extends OSGiImpl<ConfigurationHolder> {
 								atomicReference.set(configuration);
 							}
 							else {
-								if (!terminatorAtomicReference.get().update()) {
+								if (!UpdateSupport.sendUpdate(terminatorAtomicReference.get())) {
 									return;
 								}
 							}

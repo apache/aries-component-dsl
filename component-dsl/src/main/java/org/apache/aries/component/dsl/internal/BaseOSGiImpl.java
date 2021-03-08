@@ -23,6 +23,7 @@ import org.osgi.framework.InvalidSyntaxException;
 
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -259,13 +260,17 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 					}
 				},
 					() -> {
-						boolean refresh = terminator.update();
+						AtomicBoolean atomicBoolean = new AtomicBoolean();
 
-						if (!refresh) {
-							onUpdate.accept(t);
-						}
+						UpdateSupport.deferPublication(() -> {
+							if (!atomicBoolean.get()) {
+								onUpdate.accept(t);
+							}
+						});
 
-						return refresh;
+						atomicBoolean.set(terminator.update());
+
+						return atomicBoolean.get();
 					}
 				);
 

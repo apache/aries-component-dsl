@@ -17,8 +17,11 @@
 
 package org.apache.aries.component.dsl.internal;
 
+import org.apache.aries.component.dsl.OSGiResult;
+
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.function.Supplier;
 
 /**
  * @author Carlos Sierra Andrés
@@ -55,6 +58,14 @@ public class UpdateSupport {
     }
 
     public static void runUpdate(Runnable runnable) {
+        UpdateSupport.<Void>runInUpdate(() -> {runnable.run(); return null;});
+    }
+
+    public static boolean sendUpdate(OSGiResult osgiResult) {
+        return runInUpdate(osgiResult::update);
+    }
+
+    public static <R> R runInUpdate(Supplier<R> supplier) {
         isUpdate.set(true);
 
         Deque<Deque<Runnable>> deferredPublishers =
@@ -66,7 +77,7 @@ public class UpdateSupport {
         deferredTerminators.addLast(new LinkedList<>());
 
         try {
-            runnable.run();
+            return supplier.get();
         }
         finally {
             isUpdate.set(false);
@@ -88,4 +99,5 @@ public class UpdateSupport {
             isUpdate.set(!deferredTerminators.isEmpty());
         }
     }
+
 }

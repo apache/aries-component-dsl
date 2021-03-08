@@ -19,6 +19,8 @@ package org.apache.aries.component.dsl.internal;
 
 import org.apache.aries.component.dsl.OSGiResult;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * @author Carlos Sierra Andrés
  */
@@ -58,11 +60,18 @@ public class EffectsOSGi extends OSGiImpl<Void> {
                         }
                     },
                     () -> {
-                        onUpdate.run();
+                        AtomicBoolean atomicBoolean = new AtomicBoolean();
 
-                        return terminator.update();
-                    }
-                );
+                        UpdateSupport.deferPublication(() -> {
+                            if (!atomicBoolean.get()) {
+                                onUpdate.run();
+                            }
+                        });
+
+                        atomicBoolean.set(terminator.update());
+
+                        return atomicBoolean.get();
+                    }                );
 
                 try {
                     onAddingAfter.run();

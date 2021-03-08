@@ -74,7 +74,7 @@ public class ServiceReferenceOSGi<T>
 		public void modifiedService(
 			ServiceReference<T> reference, Tracked<T> tracked) {
 
-			if (tracked.runnable.update()) {
+			if (UpdateSupport.sendUpdate(tracked.runnable)) {
 				UpdateSupport.runUpdate(() -> {
 					tracked.runnable.run();
 					tracked.cachingServiceReference = new CachingServiceReference<>(
