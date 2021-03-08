@@ -32,7 +32,7 @@ import static org.apache.aries.component.dsl.OSGi.NOOP;
 public class Pad<T, S> implements Publisher<T>, OSGiResult {
 
     public Pad(
-        ExecutionContext bundleContext,
+        ExecutionContext executionContext,
         Function<OSGi<T>, OSGi<S>> fun,
         Publisher<? super S> continuation) {
 
@@ -40,7 +40,7 @@ public class Pad<T, S> implements Publisher<T>, OSGiResult {
 
         OSGi<S> next = fun.apply(probe);
 
-        _result = next.run(bundleContext, continuation);
+        _result = next.run(executionContext, continuation);
 
         _publisher = continuation.pipe(
             probe.getPublisher() != null ?
