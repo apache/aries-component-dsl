@@ -48,7 +48,12 @@ public class RefreshWhenOSGi<T> extends OSGiImpl<T> {
                     }
                 ));
 
-            return new OSGiResultImpl(result::close, () -> false);
+            return new OSGiResultImpl(
+                result::close,
+                () -> {
+                    result.update(); return false;
+                }
+            );
         });
     }
 
