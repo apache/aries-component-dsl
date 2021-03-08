@@ -227,15 +227,6 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 	public OSGi<T> effects(
 		Consumer<? super T> onAddedBefore, Consumer<? super T> onAddedAfter,
 		Consumer<? super T> onRemovedBefore,
-		Consumer<? super T> onRemovedAfter) {
-
-		return effects(onAddedBefore, onAddedAfter, onRemovedBefore, onRemovedAfter, __ -> {});
-	}
-
-	@Override
-	public OSGi<T> effects(
-		Consumer<? super T> onAddedBefore, Consumer<? super T> onAddedAfter,
-		Consumer<? super T> onRemovedBefore,
 		Consumer<? super T> onRemovedAfter,
 		Consumer<? super T> onUpdate) {
 

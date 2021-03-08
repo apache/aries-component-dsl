@@ -599,13 +599,19 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		return effects(onAdded, __ -> {}, __ -> {}, onRemoved);
 	}
 
-	OSGi<T> effects(
+	default OSGi<T> effects(
+		Consumer<? super T> onAdded, Consumer<? super T> onRemoved, Consumer<? super T> onUpdate) {
+
+		return effects(onAdded, __ -> {}, __ -> {}, onRemoved, onUpdate);
+	}
+
+	default OSGi<T> effects(
 		Consumer<? super T> onAddedBefore, Consumer<? super T> onAddedAfter,
 		Consumer<? super T> onRemovedBefore,
-		Consumer<? super T> onRemovedAfter);
+		Consumer<? super T> onRemovedAfter) {
 
-	default OSGi<T> effects(Effect<? super T> effect) {
-		return effects(effect.getOnIncoming(), effect.getOnLeaving());
+		return effects(
+			onAddedBefore, onAddedAfter, onRemovedBefore, onRemovedAfter, __ -> {});
 	}
 
 	OSGi<T> effects(
@@ -613,6 +619,10 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		Consumer<? super T> onRemovedBefore,
 		Consumer<? super T> onRemovedAfter,
 		Consumer<? super T> onUpdate);
+
+	default OSGi<T> effects(Effect<? super T> effect) {
+		return effects(effect.getOnIncoming(), effect.getOnLeaving());
+	}
 
 	OSGi<T> filter(Predicate<T> predicate);
 

@@ -1952,8 +1952,6 @@ public class DSLTest {
 
                         atomicInteger.incrementAndGet();
                     },
-                    __ -> {},
-                    __ -> {},
                     __ -> atomicReference.set(null),
                     sr ->
                         atomicReference.set(
