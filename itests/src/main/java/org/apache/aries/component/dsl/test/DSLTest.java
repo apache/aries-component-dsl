@@ -1921,6 +1921,73 @@ public class DSLTest {
         }
     }
 
+    @Test
+    public void testServiceReferenceWithFilterUpdates() {
+        AtomicReference<String> atomicReference = new AtomicReference<>();
+
+        ServiceRegistration<Service> serviceRegistration =
+            bundleContext.registerService(
+                Service.class, new Service(),
+                new Hashtable<String, Object>() {{
+                    put("property", "original");
+                    put("admissible", "true");
+                }});
+
+        AtomicInteger atomicInteger = new AtomicInteger();
+
+        try {
+            OSGi<?> program =
+                refreshAsUpdates(
+                    serviceReferences(
+                        Service.class
+                    ).filter(
+                        sr -> sr.getProperty("admissible").equals("true")
+                    )
+                ).map(
+                    CachingServiceReference::getServiceReference
+                ).effects(
+                    sr -> {
+                        atomicReference.set(
+                            String.valueOf(sr.getProperty("property")));
+
+                        atomicInteger.incrementAndGet();
+                    },
+                    __ -> {},
+                    __ -> {},
+                    __ -> atomicReference.set(null),
+                    sr ->
+                        atomicReference.set(
+                            String.valueOf(sr.getProperty("property")))
+                );
+
+            program.run(bundleContext);
+
+            assertEquals(1, atomicInteger.get());
+            assertEquals("original", atomicReference.get());
+
+            serviceRegistration.setProperties(
+                new Hashtable<String, Object>() {{
+                    put("property", "updated");
+                    put("admissible", "true");
+                }});
+
+            assertEquals(1, atomicInteger.get());
+            assertEquals("updated", atomicReference.get());
+
+            serviceRegistration.setProperties(
+                new Hashtable<String, Object>() {{
+                    put("property", "updated");
+                    put("admissible", "false");
+                }});
+
+            assertEquals(1, atomicInteger.get());
+            assertNull(atomicReference.get());
+        }
+        finally {
+            serviceRegistration.unregister();
+        }
+    }
+
 
     @Test
     public void testServiceReferenceUpdatesWithSelector() {

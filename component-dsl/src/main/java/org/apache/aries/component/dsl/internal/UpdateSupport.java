@@ -32,6 +32,10 @@ public class UpdateSupport {
     private static final ThreadLocal<Boolean> isUpdate =
         ThreadLocal.withInitial(() -> Boolean.FALSE);
 
+    public static boolean isUpdate() {
+        return isUpdate.get();
+    }
+
     public static void deferPublication(Runnable runnable) {
         if (isUpdate.get()) {
             deferredPublishersStack.get().peekLast().addLast(runnable);
