@@ -1887,8 +1887,6 @@ public class DSLTest {
                         atomicInteger.incrementAndGet();
                     },
                     __ -> {},
-                    __ -> {},
-                    __ -> {},
                     csr ->
                         atomicReference.set(
                             String.valueOf(
