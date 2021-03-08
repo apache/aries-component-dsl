@@ -53,8 +53,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
 
 /**
@@ -376,29 +374,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	}
 
 	static <T> OSGi<T> once(OSGi<T> program) {
-		return program.transform(op -> {
-			AtomicInteger count = new AtomicInteger();
-
-			AtomicReference<Runnable> terminator = new AtomicReference<>();
-
-			return t -> {
-				if (count.getAndIncrement() == 0) {
-					UpdateSupport.deferPublication(
-						() -> terminator.set(op.apply(t)));
-				}
-
-				return () -> {
-					if (count.decrementAndGet() == 0) {
-						UpdateSupport.deferTermination(() -> {
-							Runnable runnable = terminator.getAndSet(NOOP);
-
-							runnable.run();
-						});
-					}
-
-				};
-			};
-		});
+		return program.transform(new OnceTransformer<>());
 	}
 
 	static OSGi<ServiceObjects<Object>> prototypes(String filterString) {
@@ -455,56 +431,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 	}
 
 	static <T> OSGi<T> refreshAsUpdates(OSGi<T> program) {
-		return program.transform(op -> {
-			class ResultState {
-				boolean gone;
-				OSGiResult result;
-
-				public ResultState(boolean gone, OSGiResult result) {
-					this.gone = gone;
-					this.result = result;
-				}
-			}
-
-			ThreadLocal<ResultState> threadLocal = ThreadLocal.withInitial(() -> null);
-
-			return t -> {
-				AtomicReference<OSGiResult> atomicReference = new AtomicReference<>(NOOP);
-
-				if (!UpdateSupport.isUpdate()) {
-					atomicReference.set(op.publish(t));
-				}
-				else {
-					threadLocal.get().gone = false;
-				}
-
-				return new OSGiResultImpl(
-					() -> {
-						if (!UpdateSupport.isUpdate()) {
-							atomicReference.getAndSet(NOOP).run();
-						}
-						else {
-							threadLocal.set(new ResultState(true, atomicReference.get()));
-
-							UpdateSupport.deferTermination(
-								() -> {
-									if (threadLocal.get().gone) {
-										threadLocal.get().result.run();
-
-										threadLocal.remove();
-										atomicReference.set(NOOP);
-									}
-									else {
-										threadLocal.get().result.update();
-									}
-								}
-							);
-						}
-					},
-					() -> atomicReference.get().update()
-				);
-			};
-		});
+		return program.transform(new RefreshAsUpdatesTransformer<>());
 	}
 
 	static <T> OSGi<T> refreshWhen(OSGi<T> program, Predicate<T> refresher) {
