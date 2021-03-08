@@ -259,9 +259,13 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 					}
 				},
 					() -> {
-						onUpdate.accept(t);
+						boolean refresh = terminator.update();
 
-						return terminator.update();
+						if (!refresh) {
+							onUpdate.accept(t);
+						}
+
+						return refresh;
 					}
 				);
 
