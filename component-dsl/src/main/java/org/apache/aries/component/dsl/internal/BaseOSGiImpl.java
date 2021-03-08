@@ -319,6 +319,7 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 		return transform(op -> t -> op.apply(function.apply(t)));
 	}
 
+	@Deprecated
 	@Override
 	public OSGi<T> recover(BiFunction<T, Exception, T> onError) {
 		return new BaseOSGiImpl<>((executionContext, op) ->
@@ -335,6 +336,7 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 			));
 	}
 
+	@Deprecated
 	@Override
 	public OSGi<T> recoverWith(BiFunction<T, Exception, OSGi<T>> onError) {
 		return new BaseOSGiImpl<>((executionContext, op) ->
