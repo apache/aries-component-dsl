@@ -1825,18 +1825,21 @@ public class DSLTest {
 
         AtomicInteger atomicInteger = new AtomicInteger();
 
-        try {
+        try (
             /* reload only when property "good" has changed */
-            OSGi<?> program = serviceReferences(
-                Service.class, csr -> csr.isDirty("good")).map(
-                    csr -> csr.getProperty("good"));
+            OSGiResult osgiResult = serviceReferences(
+                Service.class, csr -> csr.isDirty("good")
+            ).map(
+                csr -> csr.getProperty("good")
+            ).run(
+                bundleContext,
+                (__) -> {
+                    atomicInteger.incrementAndGet();
 
-            program.run(bundleContext, (__) -> {
-                atomicInteger.incrementAndGet();
-
-                return NOOP;
-            });
-
+                    return NOOP;
+                }
+            )
+        ) {
             assertEquals(1, atomicInteger.get());
 
             serviceRegistration.setProperties(
@@ -1873,8 +1876,8 @@ public class DSLTest {
 
         AtomicInteger atomicInteger = new AtomicInteger();
 
-        try {
-            OSGi<?> program =
+        try (
+            OSGiResult osgiResult =
                 serviceReferences(
                     Service.class,
                     csr -> csr.getServiceReference().getProperty("property").equals("refresh")
@@ -1891,10 +1894,10 @@ public class DSLTest {
                         atomicReference.set(
                             String.valueOf(
                                 csr.getServiceReference().getProperty("property")))
-                );
-
-            program.run(bundleContext);
-
+                ).run(
+                    bundleContext
+                )
+        ) {
             assertEquals(1, atomicInteger.get());
             assertEquals("original", atomicReference.get());
 
@@ -1933,8 +1936,8 @@ public class DSLTest {
 
         AtomicInteger atomicInteger = new AtomicInteger();
 
-        try {
-            OSGi<?> program =
+        try (
+            OSGiResult osgiResult =
                 refreshAsUpdates(
                     serviceReferences(
                         Service.class
@@ -1954,10 +1957,10 @@ public class DSLTest {
                     sr ->
                         atomicReference.set(
                             String.valueOf(sr.getProperty("property")))
-                );
-
-            program.run(bundleContext);
-
+                ).run(
+                    bundleContext
+                )
+        ) {
             assertEquals(1, atomicInteger.get());
             assertEquals("original", atomicReference.get());
 
@@ -1984,7 +1987,6 @@ public class DSLTest {
         }
     }
 
-
     @Test
     public void testServiceReferenceUpdatesWithSelector() {
         AtomicReference<String> atomicReference = new AtomicReference<>();
@@ -1998,8 +2000,8 @@ public class DSLTest {
 
         AtomicInteger atomicInteger = new AtomicInteger();
 
-        try {
-            OSGi<?> program = refreshWhen(
+        try (
+            OSGiResult osgiResult = refreshWhen(
                     ServiceReferences.withUpdate(Service.class),
                     csr -> csr.getServiceReference().getProperty("property").equals("refresh")
             ).effects(
@@ -2014,10 +2016,10 @@ public class DSLTest {
                 csr ->
                     atomicReference.set(
                         String.valueOf(csr.getServiceReference().getProperty("property")))
-            );
-
-            program.run(bundleContext);
-
+            ).run(
+                bundleContext
+            )
+        ) {
             assertEquals(1, atomicInteger.get());
             assertEquals("original", atomicReference.get());
 
@@ -2215,8 +2217,8 @@ public class DSLTest {
                     put("property", "original");
                 }});
 
-        try {
-            OSGi<?> program =
+        try (
+            OSGiResult osgiResult =
                 serviceReferences(
                     Service.class, __ -> false
                 ).effects(
@@ -2233,9 +2235,10 @@ public class DSLTest {
                             __ -> updateEffects.add("second") //should never fire because refresh is true
                         )
                         , __ -> true)
-                );
-
-            program.run(bundleContext);
+                ).run(
+                    bundleContext
+                )
+        ) {
 
             assertEquals(Collections.singletonList("effect"), effects);
 
@@ -2263,8 +2266,8 @@ public class DSLTest {
                     put("property", "original");
                 }});
 
-        try {
-            OSGi<?> program =
+        try (
+            OSGiResult osgiResult =
                 serviceReferences(
                     Service.class, __ -> false
                 ).effects(
@@ -2275,10 +2278,10 @@ public class DSLTest {
                     __ -> {},
                     __ -> {},
                     __ -> updateEffects.add("second")
-                );
-
-            program.run(bundleContext);
-
+                ).run(
+                    bundleContext
+                )
+        ) {
             assertEquals(Collections.emptyList(), updateEffects);
 
             serviceRegistration.setProperties(
@@ -2304,8 +2307,8 @@ public class DSLTest {
                     put("property", "original");
                 }});
 
-        try {
-            OSGi<?> program =
+        try (
+            OSGiResult osgiResult =
                 refreshWhen(
                     serviceReferences(
                         Service.class, __ -> false
@@ -2319,10 +2322,10 @@ public class DSLTest {
                         __ -> updateEffects.add("second")
                     ),
                     __ -> true
+                ).run(
+                    bundleContext
                 );
-
-            program.run(bundleContext);
-
+        )  {
             assertEquals(Collections.emptyList(), updateEffects);
 
             serviceRegistration.setProperties(
