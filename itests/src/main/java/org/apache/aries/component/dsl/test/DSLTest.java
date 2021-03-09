@@ -2204,6 +2204,55 @@ public class DSLTest {
     }
 
     @Test
+    public void testRefreshWhenDoesNotPropagateUpdates() {
+        ArrayList<String> effects = new ArrayList<>();
+        ArrayList<String> updateEffects = new ArrayList<>();
+
+        ServiceRegistration<Service> serviceRegistration =
+            bundleContext.registerService(
+                Service.class, new Service(),
+                new Hashtable<String, Object>() {{
+                    put("property", "original");
+                }});
+
+        try {
+            OSGi<?> program =
+                serviceReferences(
+                    Service.class, __ -> false
+                ).effects(
+                    __ -> effects.add("effect"), //should not repeat by last __ -> true
+                    __ -> {},
+                    __ -> updateEffects.add("first")
+                ).then(
+                    refreshWhen(
+                        serviceReferences(
+                            Service.class, __ -> false
+                        ).effects(
+                            __ -> {},
+                            __ -> {},
+                            __ -> updateEffects.add("second") //should never fire because refresh is true
+                        )
+                        , __ -> true)
+                );
+
+            program.run(bundleContext);
+
+            assertEquals(Collections.singletonList("effect"), effects);
+
+            serviceRegistration.setProperties(
+                new Hashtable<String, Object>() {{
+                    put("property", "updated");
+                }});
+
+            assertEquals(Collections.singletonList("effect"), effects);
+            assertEquals(Collections.singletonList("first"), updateEffects);
+        }
+        finally {
+            serviceRegistration.unregister();
+        }
+    }
+
+    @Test
     public void testUpdateEffectsOrder() {
         ArrayList<String> updateEffects = new ArrayList<>();
 
