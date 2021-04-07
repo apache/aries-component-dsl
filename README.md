@@ -1,6 +1,7 @@
 # osgi-component-dsl
 
 [![Build Status](https://builds.apache.org/buildStatus/icon?job=Aries-component-dsl-master)](https://builds.apache.org/job/Aries-component-dsl-master)
+[![CI Build](https://github.com/rotty3000/aries-component-dsl/actions/workflows/maven.yml/badge.svg)](https://github.com/rotty3000/aries-component-dsl/actions/workflows/maven.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/org.apache.aries.component-dsl/org.apache.aries.component-dsl.component-dsl.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.apache.aries.component-dsl%22%20AND%20a:%22org.apache.aries.component-dsl.component-dsl%22)
 
 A lightweight functional DSL to interact with OSGi registry.
