@@ -15,24 +15,21 @@
 #    specific language governing permissions and limitations
 #    under the License.
 
--runrequires: \
-    osgi.identity;filter:='(osgi.identity=org.apache.aries.component-dsl.itests)'
+#-runtrace: true
+#-runjdb: 8000
 
 -runfw: org.eclipse.osgi
 
-#-runtrace: true
-
--runee: JavaSE-1.8
 -resolve.effective: resolve, active
 
--runsystempackages.eqnx: javax.script
--runsystemcapabilities.dflt: ${native_capability}
--runproperties:
+# Keep resolution results in sorted order for better diff
+-runstartlevel: \
+	order=sortbynameversion,\
+	begin=-1
+
 -runbundles: \
-	org.apache.servicemix.bundles.junit;version='[4.12.0,4.12.1)',\
-	org.apache.felix.configadmin;version='[1.9.14,1.9.15)',\
-	org.osgi.service.cm;version='[1.6.0,1.6.1)',\
 	org.apache.aries.component-dsl.itests;version='[2.0.0,2.0.1)',\
-	org.apache.aries.component-dsl.component-dsl;version='[2.0.0,2.0.1)'
+	org.apache.felix.configadmin;version='[1.9.20,1.9.21)',\
+	org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)'
 
 -include: -personal.bnd
