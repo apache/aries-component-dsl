@@ -31,13 +31,16 @@ The foundation of the DSL is one type `OSGi<T>`. There exist several static
 functions defined on the `OSGi` class that provide us with instances of the
 type. Let's start getting a reference to a service:
 
-    OSGi<Service> program = OSGi.service(OSGi.serviceReferences(Service.class));
+```java
+OSGi<Service> program = OSGi.service(OSGi.serviceReferences(Service.class));
+```
 
 if we allow static imports from `OSGi` class we can type the former as:
 
-    OSGi<Service> services = service(serviceReferences(Service.class));
-	OSGi<Dictionary<String, ?>> configurations = configurations("factory-pid");
-
+```java
+OSGi<Service> services = service(serviceReferences(Service.class));
+OSGi<Dictionary<String, ?>> configurations = configurations("factory-pid");
+```
 
 ### Combining operations
 
@@ -45,30 +48,36 @@ Once we have instances of `OSGi` we can combine them. We can use `flatMap` to
 specify that one operation depends on a previous one. For example we could need
 to specify a filter for the services that comes in the configuration:
 
-    OSGi<Service> services = configurations("factory-pid").flatMap(conf ->
-		service(serviceReferences(Service.class, conf.get("service.filter").toString()))
-	);
+```java
+OSGi<Service> services = configurations("factory-pid").flatMap(conf ->
+	service(serviceReferences(Service.class, conf.get("service.filter").toString()))
+);
+```
 
 we can also register instances. For this purpose let's create a new class that
 will hold instances of both `Dictionary<String, ?>` and `Service`.
 
-    class Holder {
+```java
+class Holder {
 
-		Dictionary<String, ?> properties;
-		Service service;
+	Dictionary<String, ?> properties;
+	Service service;
 
-		public Holder(Dictionary<String, ?> properties, Service service) {
-			this.properties = properties;
-			this.service = service;
-		}
-
+	public Holder(Dictionary<String, ?> properties, Service service) {
+		this.properties = properties;
+		this.service = service;
 	}
+
+}
+```
 
 and we can register instances of that class with:
 
-	OSGi<ServiceRegistration<Holder>> program = configurations("factory-pid").flatMap(conf ->
-			service(serviceReferences(Service.class, conf.get("service.filter").toString())).flatMap(service ->
-				register(Holder.class, new Holder(conf, service), new HashMap<>())));
+```java
+OSGi<ServiceRegistration<Holder>> program = configurations("factory-pid").flatMap(conf ->
+		service(serviceReferences(Service.class, conf.get("service.filter").toString())).flatMap(service ->
+			register(Holder.class, new Holder(conf, service), new HashMap<>())));
+```
 
 in this example we are tracking factory configurations from pid
 `factory-pid`. For each configuration factory that's there, or that's created in
@@ -91,15 +100,19 @@ programs like reusable components.
 Once you have a complete specification you can run it passing a `BundleContext`
 to it:
 
-    OSGi<T> program;
-	BundleContext bundleContext;
+```java
+OSGi<T> program;
+BundleContext bundleContext;
 
-	OSGiResult result = program.run(bundleContext);
+OSGiResult result = program.run(bundleContext);
+```
 
 the `OSGiResult` instance references the execution of the program. To stop and
 clean it we call:
 
-    result.close()
+```java
+result.close()
+```
 
 ### Combinations without dependency
 
@@ -107,8 +120,9 @@ we can also specify combinations when there exist no dependencies between the
 operations. For instance we can declare we want to register a `Holder` for every
 configuration + service combination using `OSGi.combine`:
 
-    OSGi<Holder> holders = combine(Holder::new, configurations("factory.pid"), services(Service.class));
-
+```java
+OSGi<Holder> holders = combine(Holder::new, configurations("factory.pid"), services(Service.class));
+```
 
 ## Predefined Operations
 
@@ -127,22 +141,24 @@ There are two operations to deal with `Configuration Admin` configurations:
 `OSGi.serviceReferences` is a set of overloaded functions that return operations
 of type `OSGi<CachingServiceReference>`:
 
-    OSGi<CachingServiceReference<T>> serviceReferences(Class<T> clazz)
+```java
+OSGi<CachingServiceReference<T>> serviceReferences(Class<T> clazz)
 
-	OSGi<CachingServiceReference<Object>> serviceReferences(String filterString)
+OSGi<CachingServiceReference<Object>> serviceReferences(String filterString)
 
-	OSGi<CachingServiceReference<T>> serviceReferences(Class<T> clazz, String filterString)
+OSGi<CachingServiceReference<T>> serviceReferences(Class<T> clazz, String filterString)
 
-	OSGi<CachingServiceReference<T>> serviceReferences(
-		Class<T> clazz, String filterString,
-		Refresher<? super CachingServiceReference<T>> onModified)
+OSGi<CachingServiceReference<T>> serviceReferences(
+	Class<T> clazz, String filterString,
+	Refresher<? super CachingServiceReference<T>> onModified)
 
-	OSGi<CachingServiceReference<T>> serviceReferences(
-		Class<T> clazz, Refresher<? super CachingServiceReference<T>> onModified)
+OSGi<CachingServiceReference<T>> serviceReferences(
+	Class<T> clazz, Refresher<? super CachingServiceReference<T>> onModified)
 
-	OSGi<CachingServiceReference<Object>> serviceReferences(
-		String filterString,
-		Refresher<? super CachingServiceReference<Object>> onModified)
+OSGi<CachingServiceReference<Object>> serviceReferences(
+	String filterString,
+	Refresher<? super CachingServiceReference<Object>> onModified)
+```
 
 #### CachingServiceReference<T>
 
@@ -200,25 +216,27 @@ the library offers `register` set of functions. When the associated instances
 are retracted, `register` set of functions also unregister their instances as a
 result.
 
-	OSGi<ServiceRegistration<T>> register(
-		Class<T> clazz, ServiceFactory<T> service,
-		Map<String, Object> properties)
+```java
+OSGi<ServiceRegistration<T>> register(
+	Class<T> clazz, ServiceFactory<T> service,
+	Map<String, Object> properties)
 
 
-	OSGi<ServiceRegistration<?>> register(
-		String[] classes, Object service, Map<String, ?> properties)
+OSGi<ServiceRegistration<?>> register(
+	String[] classes, Object service, Map<String, ?> properties)
 
-	OSGi<ServiceRegistration<T>> register(
-		Class<T> clazz, Supplier<T> service,
-		Supplier<Map<String, ?>> properties)
+OSGi<ServiceRegistration<T>> register(
+	Class<T> clazz, Supplier<T> service,
+	Supplier<Map<String, ?>> properties)
 
-	OSGi<ServiceRegistration<T>> register(
-		Class<T> clazz, ServiceFactory<T> service,
-		Supplier<Map<String, ?>> properties)
+OSGi<ServiceRegistration<T>> register(
+	Class<T> clazz, ServiceFactory<T> service,
+	Supplier<Map<String, ?>> properties)
 
-	OSGi<ServiceRegistration<?>> register(
-		String[] classes, Supplier<Object> service,
-		Supplier<Map<String, ?>> properties)
+OSGi<ServiceRegistration<?>> register(
+	String[] classes, Supplier<Object> service,
+	Supplier<Map<String, ?>> properties)
+```
 
 ## Combinators
 
@@ -234,10 +252,12 @@ all the elements that the given programs produce.
 given as argument, from left to right. Since OSGi is a dynamic environment
 `coalesce` will retract and reintroduce instances when needed. For example:
 
-	OSGi<Dictionary<String, ?>> props = coalesce(
-		configuration("some.config.pid"),
-		just(Hashtable::new)
-	);
+```java
+OSGi<Dictionary<String, ?>> props = coalesce(
+	configuration("some.config.pid"),
+	just(Hashtable::new)
+);
+```
 
 this operation will return an empty Hashtable while no configuration is
 available. If, at any moment, there is a configuration available the operation
@@ -266,7 +286,7 @@ retracted. It won't retract the instance it produces until all the instances it
 has _seen_ are gone.
 
 ## License
-
+```
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
   this work for additional information regarding copyright ownership.
@@ -281,3 +301,4 @@ has _seen_ are gone.
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
+```
