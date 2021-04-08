@@ -29,6 +29,11 @@
 	<description>Apache Aries Component DSL Integration Tests</description>
 	<name>Apache Aries Component DSL Integration Tests</name>
 
+	<properties>
+		<maven.deploy.skip>true</maven.deploy.skip>
+		<maven.install.skip>true</maven.install.skip>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.aries.component-dsl</groupId>
