@@ -124,18 +124,6 @@
 
 	<profiles>
 		<profile>
-			<id>java-release-9+</id>
-			<activation>
-				<jdk>[9,)</jdk>
-			</activation>
-			<properties>
-				<java.build.version>${java.specification.version}</java.build.version>
-				<maven.compiler.release>${java.build.version}</maven.compiler.release>
-				<maven.compiler.source>${java.build.version}</maven.compiler.source>
-				<maven.compiler.target>${java.build.version}</maven.compiler.target>
-			</properties>
-		</profile>
-		<profile>
 			<id>deploy</id>
 			<build>
 				<plugins>
