@@ -21,8 +21,8 @@ import org.apache.aries.component.dsl.*;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 
-import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -363,7 +363,7 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 		Function<T, OSGi<K>> mapper, BiFunction<K, OSGi<T>, OSGi<S>> fun) {
 
 		return new BaseOSGiImpl<>((executionContext, op) -> {
-			HashMap<K, Pad<T, S>> pads = new HashMap<>();
+			ConcurrentHashMap<K, Pad<T, S>> pads = new ConcurrentHashMap<>();
 
 			OSGiResult result = run(
 				executionContext,
