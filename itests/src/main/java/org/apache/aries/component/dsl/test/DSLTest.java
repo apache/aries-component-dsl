@@ -551,17 +551,21 @@ public class DSLTest {
 
             effect.set(deleteLatch::countDown);
 
+            AtomicInteger requestedCounter = new AtomicInteger();
+
             serviceRegistration =
                 bundleContext.registerService(
-                    ManagedService.class, __ -> deleteLatch.countDown(),
+                    ManagedService.class, __ -> {deleteLatch.countDown(); requestedCounter.incrementAndGet();},
                     new Hashtable<String, Object>() {{
                         put("service.pid", "test.configuration");
                     }});
 
             configuration.delete();
 
-            deleteLatch.await(5, TimeUnit.MINUTES);
+            boolean didCountdown = deleteLatch.await(5, TimeUnit.MINUTES);
 
+            assertTrue(didCountdown);
+            assertEquals(1, requestedCounter.get());
             assertEquals(2, counter.get());
             assertEquals(1, updateCounter.get());
 
