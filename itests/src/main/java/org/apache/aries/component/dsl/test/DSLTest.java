@@ -551,11 +551,15 @@ public class DSLTest {
 
             effect.set(deleteLatch::countDown);
 
-            AtomicInteger requestedCounter = new AtomicInteger();
+            AtomicInteger invokedCounter = new AtomicInteger();
 
             serviceRegistration =
                 bundleContext.registerService(
-                    ManagedService.class, __ -> {deleteLatch.countDown(); requestedCounter.incrementAndGet();},
+                    ManagedService.class, __ -> {
+                        if (invokedCounter.getAndIncrement() == 0) {
+                            deleteLatch.countDown();
+                        }
+                    },
                     new Hashtable<String, Object>() {{
                         put("service.pid", "test.configuration");
                     }});
@@ -565,7 +569,6 @@ public class DSLTest {
             boolean didCountdown = deleteLatch.await(5, TimeUnit.MINUTES);
 
             assertTrue(didCountdown);
-            assertEquals(1, requestedCounter.get());
             assertEquals(2, counter.get());
             assertEquals(1, updateCounter.get());
 
@@ -650,17 +653,23 @@ public class DSLTest {
 
             effect.set(deleteLatch::countDown);
 
+            AtomicInteger invokedCounter = new AtomicInteger();
             serviceRegistration =
                 bundleContext.registerService(
-                    ManagedService.class, __ -> deleteLatch.countDown(),
+                    ManagedService.class, __ -> {
+                        if (invokedCounter.getAndIncrement() == 0) {
+                            deleteLatch.countDown();
+                        }
+                    },
                     new Hashtable<String, Object>() {{
                         put("service.pid", "test.configuration");
                     }});
 
             configuration.delete();
 
-            deleteLatch.await(5, TimeUnit.MINUTES);
+            boolean didCountdown = deleteLatch.await(5, TimeUnit.MINUTES);
 
+            assertTrue(didCountdown);
             assertEquals(3, counter.get());
 
             assertTrue(atomicReference.get().isEmpty());
