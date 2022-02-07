@@ -536,7 +536,7 @@ public class DSLTest {
                 }}
             );
 
-            countDownLatch.await(10, TimeUnit.SECONDS);
+            countDownLatch.await(5, TimeUnit.MINUTES);
 
             assertEquals(1, counter.get());
             assertEquals(1, updateCounter.get());
@@ -560,7 +560,7 @@ public class DSLTest {
 
             configuration.delete();
 
-            deleteLatch.await(10, TimeUnit.SECONDS);
+            deleteLatch.await(5, TimeUnit.MINUTES);
 
             assertEquals(2, counter.get());
             assertEquals(1, updateCounter.get());
@@ -632,7 +632,7 @@ public class DSLTest {
                 }}
             );
 
-            countDownLatch.await(10, TimeUnit.SECONDS);
+            countDownLatch.await(5, TimeUnit.MINUTES);
 
             assertEquals(2, counter.get());
 
@@ -655,7 +655,7 @@ public class DSLTest {
 
             configuration.delete();
 
-            deleteLatch.await(10, TimeUnit.SECONDS);
+            deleteLatch.await(5, TimeUnit.MINUTES);
 
             assertEquals(3, counter.get());
 
@@ -703,7 +703,7 @@ public class DSLTest {
 
             configuration.update(new Hashtable<>());
 
-            countDownLatch.await(10, TimeUnit.SECONDS);
+            countDownLatch.await(5, TimeUnit.MINUTES);
 
             assertNotNull(atomicReference.get());
         }
@@ -760,7 +760,7 @@ public class DSLTest {
         {
             assertNotNull(atomicReference.get());
 
-            countDownLatch.await(10, TimeUnit.SECONDS);
+            countDownLatch.await(5, TimeUnit.MINUTES);
 
             assertEquals(1, counter.get());
         }
@@ -809,7 +809,7 @@ public class DSLTest {
 
             configuration.update(new Hashtable<>());
 
-            countDownLatch.await(10, TimeUnit.SECONDS);
+            countDownLatch.await(5, TimeUnit.MINUTES);
 
             assertNotNull(atomicReference.get());
         }
@@ -906,7 +906,7 @@ public class DSLTest {
             put("key", "service three");
         }});
 
-        assertTrue(addedLatch.await(10, TimeUnit.SECONDS));
+        assertTrue(addedLatch.await(5, TimeUnit.MINUTES));
 
         assertEquals(
             1,
@@ -927,7 +927,7 @@ public class DSLTest {
 
         configuration.delete();
 
-        assertTrue(deletedLatch.await(10, TimeUnit.SECONDS));
+        assertTrue(deletedLatch.await(5, TimeUnit.MINUTES));
 
         assertEquals(
             0,
