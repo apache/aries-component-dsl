@@ -28,7 +28,6 @@ import org.osgi.framework.FrameworkUtil;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.apache.aries.component.dsl.OSGi.just;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -49,16 +48,16 @@ public class ProbeTests {
 
         OSGi<String> program =
             probeA.flatMap(a ->
-            OSGi.onClose(
-                () -> result.accumulateAndGet("Hello", (x, y) -> x.replace(y, ""))).
+            OSGi.effects(
+                () -> result.accumulateAndGet("Hello", (x, y) -> x.replace(y, "")), () -> {}).
             flatMap(__ -> {
                 ProbeImpl<String> probeB = new ProbeImpl<>();
 
                 probeBreference.set(probeB);
 
                 return probeB.flatMap(b ->
-                    OSGi.onClose(
-                        () -> result.accumulateAndGet(", World", (x, y) -> x.replace(y, ""))).
+                    OSGi.effects(
+                        () -> result.accumulateAndGet(", World", (x, y) -> x.replace(y, "")), () -> {}).
                         then(
                             OSGi.just(a + b)));
             }
@@ -113,9 +112,9 @@ public class ProbeTests {
         OSGi<Integer> just10 = OSGi.just(10);
 
         OSGi<Integer> program = probeA.flatMap(a ->
-            OSGi.onClose(result::incrementAndGet).then(
+            OSGi.effects(result::incrementAndGet, () -> {}).then(
                 just10.flatMap(b ->
-                    OSGi.onClose(result::incrementAndGet).then(
+                    OSGi.effects(result::incrementAndGet, () -> {}).then(
                         OSGi.just(a + b)
                     ))));
 

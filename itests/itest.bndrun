@@ -24,13 +24,15 @@
 
 -resolve.effective: resolve, active
 
+-runrequires: osgi.identity;filter:='(osgi.identity=${project.artifactId}-tests)'
+
 # Keep resolution results in sorted order for better diff
 -runstartlevel: \
 	order=sortbynameversion,\
 	begin=-1
 
 -runbundles: \
-	org.apache.aries.component-dsl.itests;version='[2.0.0,2.0.1)',\
+	org.apache.aries.component-dsl.itests-tests;version='[2.0.0,2.0.1)',\
 	org.apache.felix.configadmin;version='[1.9.22,1.9.23)',\
 	org.apache.servicemix.bundles.junit;version='[4.13.2,4.13.3)'
 
