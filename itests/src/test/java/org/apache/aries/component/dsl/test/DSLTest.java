@@ -869,7 +869,7 @@ public class DSLTest {
 
         CountDownLatch addedLatch = new CountDownLatch(3);
 
-        ServiceTracker serviceTracker = new ServiceTracker<Service, Service>(
+        ServiceTracker<?, ?> serviceTracker = new ServiceTracker<Service, Service>(
             bundleContext, Service.class, null) {
 
             @Override
@@ -884,7 +884,7 @@ public class DSLTest {
 
         CountDownLatch deletedLatch = new CountDownLatch(3);
 
-        ServiceTracker serviceTracker2 = new ServiceTracker<Service, Service>(
+        ServiceTracker<?, ?> serviceTracker2 = new ServiceTracker<Service, Service>(
             bundleContext, Service.class, null) {
 
             @Override
@@ -1672,7 +1672,9 @@ public class DSLTest {
     public void testNestedRecoverAndRethrow() {
         ArrayList<Integer> result = new ArrayList<>();
 
+        @SuppressWarnings("serial")
         class A extends RuntimeException {}
+        @SuppressWarnings("serial")
         class B extends RuntimeException {}
 
         OSGi<Integer> program = recover(
@@ -1714,7 +1716,9 @@ public class DSLTest {
     public void testNestedRecoverWithAndRethrow() {
         ArrayList<Integer> result = new ArrayList<>();
 
+        @SuppressWarnings("serial")
         class A extends RuntimeException {}
+        @SuppressWarnings("serial")
         class B extends RuntimeException {}
 
         OSGi<Integer> program = recoverWith(

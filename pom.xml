@@ -38,7 +38,7 @@
 		<maven.compiler.target>${java.build.version}</maven.compiler.target>
 		<project.build.outputTimestamp>10</project.build.outputTimestamp>
 
-		<bnd.version>6.1.0</bnd.version>
+		<bnd.version>6.2.0</bnd.version>
 	</properties>
 
 	<build>
@@ -46,26 +46,21 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.10.0</version>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.2.2</version>
-				<configuration>
-					<archive>
-						<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-					</archive>
-				</configuration>
+				<version>3.10.0</version><!--$NO-MVN-MAN-VER$-->
 			</plugin>
 			<plugin>
 				<groupId>biz.aQute.bnd</groupId>
 				<artifactId>bnd-maven-plugin</artifactId>
 				<version>${bnd.version}</version>
+				<extensions>true</extensions>
+				<configuration>
+					<skipIfEmpty>true</skipIfEmpty>
+				</configuration>
 				<executions>
 					<execution>
+						<id>default-jar</id>
 						<goals>
-							<goal>bnd-process</goal>
+							<goal>jar</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -161,7 +156,7 @@
 		<connection>scm:git:git@github.com:apache/aries-component-dsl.git</connection>
 		<developerConnection>scm:git:git@github.com:apache/aries-component-dsl.git</developerConnection>
 		<url>https://github.com/apache/aries-component-dsl</url>
-	  <tag>HEAD</tag>
-  </scm>
+		<tag>HEAD</tag>
+	</scm>
 
 </project>
