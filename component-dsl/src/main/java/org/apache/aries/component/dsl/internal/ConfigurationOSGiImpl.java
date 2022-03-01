@@ -39,96 +39,96 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class ConfigurationOSGiImpl extends OSGiImpl<ConfigurationHolder> {
 
-	public ConfigurationOSGiImpl(String pid) {
-		super((executionContext, op) -> {
-			AtomicReference<Configuration> atomicReference =
-				new AtomicReference<>(null);
+    public ConfigurationOSGiImpl(String pid) {
+        super((executionContext, op) -> {
+            AtomicReference<Configuration> atomicReference =
+                new AtomicReference<>(null);
 
-			AtomicReference<OSGiResult>
-				terminatorAtomicReference = new AtomicReference<>(
-					new OSGiResultImpl(NOOP, () -> false));
+            AtomicReference<OSGiResult>
+                terminatorAtomicReference = new AtomicReference<>(
+                    new OSGiResultImpl(NOOP, () -> false));
 
-			AtomicBoolean closed = new AtomicBoolean();
+            AtomicBoolean closed = new AtomicBoolean();
 
-			AtomicLong initialCounter = new AtomicLong();
+            AtomicLong initialCounter = new AtomicLong();
 
-			CountDownLatch countDownLatch = new CountDownLatch(1);
+            CountDownLatch countDownLatch = new CountDownLatch(1);
 
-			BundleContext bundleContext = executionContext.getBundleContext();
+            BundleContext bundleContext = executionContext.getBundleContext();
 
-			ServiceRegistration<?> serviceRegistration =
-				bundleContext.registerService(
-					ConfigurationListener.class,
-					(ConfigurationEvent configurationEvent) -> {
-						if (configurationEvent.getFactoryPid() != null ||
-							!configurationEvent.getPid().equals(pid)) {
+            ServiceRegistration<?> serviceRegistration =
+                bundleContext.registerService(
+                    ConfigurationListener.class,
+                    (ConfigurationEvent configurationEvent) -> {
+                        if (configurationEvent.getFactoryPid() != null ||
+                            !configurationEvent.getPid().equals(pid)) {
 
-							return;
-						}
+                            return;
+                        }
 
-						try {
-							countDownLatch.await(1, TimeUnit.MINUTES);
-						}
-						catch (InterruptedException e) {
-							return;
-						}
+                        try {
+                            countDownLatch.await(1, TimeUnit.MINUTES);
+                        }
+                        catch (InterruptedException e) {
+                            return;
+                        }
 
-						Configuration configuration;
+                        Configuration configuration;
 
-						if (configurationEvent.getType() ==
-							ConfigurationEvent.CM_DELETED) {
+                        if (configurationEvent.getType() ==
+                            ConfigurationEvent.CM_DELETED) {
 
-							atomicReference.set(null);
+                            atomicReference.set(null);
 
-							signalLeave(terminatorAtomicReference);
-						}
-						else {
-							 configuration = getConfiguration(
-								 bundleContext, configurationEvent);
+                            signalLeave(terminatorAtomicReference);
+                        }
+                        else {
+                             configuration = getConfiguration(
+                                 bundleContext, configurationEvent);
 
-							if (configuration == null ||
-								configuration.getChangeCount() == initialCounter.get()) {
+                            if (configuration == null ||
+                                configuration.getChangeCount() == initialCounter.get()) {
 
-								return;
-							}
+                                return;
+                            }
 
-							if (atomicReference.get() == null) {
-								atomicReference.set(configuration);
-							}
-							else {
-								if (!UpdateSupport.sendUpdate(terminatorAtomicReference.get())) {
-									return;
-								}
-							}
+                            if (atomicReference.get() == null) {
+                                atomicReference.set(configuration);
+                            }
+                            else {
+                                if (!UpdateSupport.sendUpdate(terminatorAtomicReference.get())) {
+                                    return;
+                                }
+                            }
 
-							UpdateSupport.runUpdate(() -> {
-								signalLeave(terminatorAtomicReference);
+                            UpdateSupport.runUpdate(() -> {
+                                signalLeave(terminatorAtomicReference);
 
-								terminatorAtomicReference.set(
-									op.apply(new ConfigurationHolderImpl(configuration)));
+                                terminatorAtomicReference.set(
+                                    op.apply(new ConfigurationHolderImpl(configuration)));
 
-							});
+                            });
 
-							if (closed.get()) {
-								/*
-								if we have closed while executing the
-								effects we have to execute the terminator
-								directly instead of storing it
-								*/
-								signalLeave(terminatorAtomicReference);
-							}
-						}
-					},
-					new Hashtable<>());
+                            if (closed.get()) {
+                                /*
+                                if we have closed while executing the
+                                effects we have to execute the terminator
+                                directly instead of storing it
+                                */
+                                signalLeave(terminatorAtomicReference);
+                            }
+                        }
+                    },
+                    new Hashtable<>());
 
-			ServiceReference<ConfigurationAdmin> serviceReference =
-				bundleContext.getServiceReference(ConfigurationAdmin.class);
+            ServiceReference<ConfigurationAdmin> serviceReference =
+                bundleContext.getServiceReference(ConfigurationAdmin.class);
 
-			if (serviceReference != null) {
-				Configuration configuration = getConfiguration(
+            if (serviceReference != null) {
+                Configuration configuration = getConfiguration(
                     bundleContext, pid, serviceReference);
 
-				if (configuration != null) {
+                if (configuration != null) {
                     atomicReference.set(configuration);
 
                     initialCounter.set(configuration.getChangeCount());
@@ -136,68 +136,68 @@ public class ConfigurationOSGiImpl extends OSGiImpl<ConfigurationHolder> {
                     terminatorAtomicReference.set(
                         op.apply(new ConfigurationHolderImpl(configuration)));
                 }
-			}
+            }
 
-			countDownLatch.countDown();
+            countDownLatch.countDown();
 
-			return new OSGiResultImpl(
-				() -> {
-					closed.set(true);
+            return new OSGiResultImpl(
+                () -> {
+                    closed.set(true);
 
-					serviceRegistration.unregister();
+                    serviceRegistration.unregister();
 
-					signalLeave(terminatorAtomicReference);
-				},
-				() -> terminatorAtomicReference.get().update())
-			;
-		});
-	}
+                    signalLeave(terminatorAtomicReference);
+                },
+                () -> terminatorAtomicReference.get().update())
+            ;
+        });
+    }
 
-	private static Configuration getConfiguration(
-		BundleContext bundleContext, ConfigurationEvent configurationEvent) {
+    private static Configuration getConfiguration(
+        BundleContext bundleContext, ConfigurationEvent configurationEvent) {
 
-		String pid = configurationEvent.getPid();
+        String pid = configurationEvent.getPid();
 
-		ServiceReference<ConfigurationAdmin> reference =
-			configurationEvent.getReference();
+        ServiceReference<ConfigurationAdmin> reference =
+            configurationEvent.getReference();
 
-		return getConfiguration(bundleContext, pid, reference);
-	}
+        return getConfiguration(bundleContext, pid, reference);
+    }
 
-	private static Configuration getConfiguration(
-		BundleContext bundleContext, String pid,
-		ServiceReference<ConfigurationAdmin> reference) {
+    private static Configuration getConfiguration(
+        BundleContext bundleContext, String pid,
+        ServiceReference<ConfigurationAdmin> reference) {
 
-		ConfigurationAdmin configurationAdmin = bundleContext.getService(
-			reference);
+        ConfigurationAdmin configurationAdmin = bundleContext.getService(
+            reference);
 
-		try {
-			Configuration[] configurations =
+        try {
+            Configuration[] configurations =
                 configurationAdmin.listConfigurations(
                     "(&(service.pid=" + pid + ")(!(service.factoryPid=*)))");
 
-			if (configurations == null || configurations.length == 0) {
+            if (configurations == null || configurations.length == 0) {
                 return null;
             }
 
-			return configurations[0];
-		}
-		catch (Exception e) {
-			return null;
-		}
-		finally {
-			bundleContext.ungetService(reference);
-		}
-	}
+            return configurations[0];
+        }
+        catch (Exception e) {
+            return null;
+        }
+        finally {
+            bundleContext.ungetService(reference);
+        }
+    }
 
-	private static void signalLeave(
-		AtomicReference<OSGiResult> terminatorAtomicReference) {
+    private static void signalLeave(
+        AtomicReference<OSGiResult> terminatorAtomicReference) {
 
-		OSGiResult old = terminatorAtomicReference.getAndSet(null);
+        OSGiResult old = terminatorAtomicReference.getAndSet(null);
 
-		if (old != null) {
+        if (old != null) {
             old.run();
         }
-	}
+    }
 
 }

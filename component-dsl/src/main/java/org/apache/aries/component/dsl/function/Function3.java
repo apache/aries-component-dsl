@@ -20,14 +20,14 @@ package org.apache.aries.component.dsl.function;
 import java.util.function.Function;
 
 /**
-* generated
-*/
+ * generated
+ */
 @FunctionalInterface
-public interface Function3<A,B,C,RESULT> {
-    
-    public RESULT apply(A a,B b,C c);
-    
-    default public Function<A,Function<B,Function<C,RESULT>>> curried() {
-        return a -> b -> c -> apply(a,b,c);
+public interface Function3<A, B, C, RESULT> {
+
+    public RESULT apply(A a, B b, C c);
+
+    default public Function<A, Function<B, Function<C, RESULT>>> curried() {
+        return a -> b -> c -> apply(a, b, c);
     }
 }

@@ -22,15 +22,15 @@ package org.apache.aries.component.dsl;
  */
 public interface OSGiResult extends AutoCloseable, Runnable {
 
-	@Override
-	public void close();
+    @Override
+    public void close();
 
-	default void run() {
-		close();
-	}
+    default void run() {
+        close();
+    }
 
-	public default boolean update() {
-		return false;
-	};
+    public default boolean update() {
+        return false;
+    };
 
 }

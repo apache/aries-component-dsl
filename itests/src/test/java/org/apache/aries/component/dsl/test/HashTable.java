@@ -25,14 +25,14 @@ import java.util.function.Consumer;
  */
 public class HashTable {
 
-	public static <K, V> Hashtable<K, V> of() {
-		return of(h -> {});
-	}
+    public static <K, V> Hashtable<K, V> of() {
+        return of(h -> {});
+    }
 
-	public static <K, V> Hashtable<K, V> of(Consumer<Hashtable<K, V>> t) {
-		Hashtable<K, V> hashtable = new Hashtable<>();
-		t.accept(hashtable);
-		return hashtable;
-	}
+    public static <K, V> Hashtable<K, V> of(Consumer<Hashtable<K, V>> t) {
+        Hashtable<K, V> hashtable = new Hashtable<>();
+        t.accept(hashtable);
+        return hashtable;
+    }
 
 }

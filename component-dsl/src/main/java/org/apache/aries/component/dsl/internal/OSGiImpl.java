@@ -24,46 +24,46 @@ import org.apache.aries.component.dsl.*;
  */
 public class OSGiImpl<T> extends BaseOSGiImpl<T> {
 
-	protected OSGiImpl(OSGiRunnable<T> operation) {
-		super(new ErrorHandlerOSGiRunnable<>(operation));
-	}
+    protected OSGiImpl(OSGiRunnable<T> operation) {
+        super(new ErrorHandlerOSGiRunnable<>(operation));
+    }
 
-	@SuppressWarnings("unchecked")
-	static <T extends Throwable> void rethrow(Throwable t) throws T {
-		throw (T)t;
-	}
+    @SuppressWarnings("unchecked")
+    static <T extends Throwable> void rethrow(Throwable t) throws T {
+        throw (T)t;
+    }
 
-	public static <T> OSGi<T> create(OSGiRunnable<T> runnable) {
-		return new OSGiImpl<>(runnable);
-	}
+    public static <T> OSGi<T> create(OSGiRunnable<T> runnable) {
+        return new OSGiImpl<>(runnable);
+    }
 
-	protected static class ErrorHandlerOSGiRunnable<T>
-		implements OSGiRunnable<T> {
+    protected static class ErrorHandlerOSGiRunnable<T>
+        implements OSGiRunnable<T> {
 
-		private final OSGiRunnable<T> operation;
+        private final OSGiRunnable<T> operation;
 
-		public ErrorHandlerOSGiRunnable(OSGiRunnable<T> operation) {
-			this.operation = operation;
-		}
+        public ErrorHandlerOSGiRunnable(OSGiRunnable<T> operation) {
+            this.operation = operation;
+        }
 
-		@Override
-		public OSGiResult run(
-			ExecutionContext ec, Publisher<? super T> op) {
+        @Override
+        public OSGiResult run(
+            ExecutionContext ec, Publisher<? super T> op) {
 
-			return operation.run(ec,
-				op.pipe(t -> {
-					try {
-						return op.publish(t);
-					} catch (PublisherRethrowException pre) {
-						rethrow(pre.getCause());
+            return operation.run(ec,
+                op.pipe(t -> {
+                    try {
+                        return op.publish(t);
+                    } catch (PublisherRethrowException pre) {
+                        rethrow(pre.getCause());
 
-						return null;
-					} catch (Exception e) {
-						return op.error(t, e);
-					}
-				}));
-		}
-	}
+                        return null;
+                    } catch (Exception e) {
+                        return op.error(t, e);
+                    }
+                }));
+        }
+    }
 }
 
 

@@ -30,67 +30,67 @@ import java.util.function.Supplier;
  * @author Carlos Sierra Andrés
  */
 public class ServiceRegistrationOSGiImpl<T>
-	extends OSGiImpl<ServiceRegistration<T>> {
+    extends OSGiImpl<ServiceRegistration<T>> {
 
-	public ServiceRegistrationOSGiImpl(
-		Class<T> clazz, Supplier<T> service,
-		Supplier<Map<String, ?>> properties) {
+    public ServiceRegistrationOSGiImpl(
+        Class<T> clazz, Supplier<T> service,
+        Supplier<Map<String, ?>> properties) {
 
-		super((executionContext, op) -> {
-			ServiceRegistration<?> serviceRegistration =
-				executionContext.getBundleContext().registerService(
-					clazz, service.get(), getProperties(properties.get()));
+        super((executionContext, op) -> {
+            ServiceRegistration<?> serviceRegistration =
+                executionContext.getBundleContext().registerService(
+                    clazz, service.get(), getProperties(properties.get()));
 
-			return getServiceRegistrationOSGiResult(serviceRegistration, op);
-		});
-	}
+            return getServiceRegistrationOSGiResult(serviceRegistration, op);
+        });
+    }
 
-	public ServiceRegistrationOSGiImpl(
-		Class<T> clazz, ServiceFactory<T> serviceFactory,
-		Supplier<Map<String, ?>> properties) {
+    public ServiceRegistrationOSGiImpl(
+        Class<T> clazz, ServiceFactory<T> serviceFactory,
+        Supplier<Map<String, ?>> properties) {
 
-		super((executionContext, op) -> {
-			ServiceRegistration<?> serviceRegistration =
-				executionContext.getBundleContext().registerService(
-					clazz, serviceFactory,
-					getProperties(properties.get()));
+        super((executionContext, op) -> {
+            ServiceRegistration<?> serviceRegistration =
+                executionContext.getBundleContext().registerService(
+                    clazz, serviceFactory,
+                    getProperties(properties.get()));
 
-			return getServiceRegistrationOSGiResult(serviceRegistration, op);
-		});
-	}
+            return getServiceRegistrationOSGiResult(serviceRegistration, op);
+        });
+    }
 
-	public ServiceRegistrationOSGiImpl(
-		String[] clazz, Supplier<Object> service,
-		Supplier<Map<String, ?>> properties) {
+    public ServiceRegistrationOSGiImpl(
+        String[] clazz, Supplier<Object> service,
+        Supplier<Map<String, ?>> properties) {
 
-		super((executionContext, op) -> {
-			ServiceRegistration<?> serviceRegistration =
-				executionContext.getBundleContext().registerService(
-					clazz, service.get(), new Hashtable<>(properties.get()));
+        super((executionContext, op) -> {
+            ServiceRegistration<?> serviceRegistration =
+                executionContext.getBundleContext().registerService(
+                    clazz, service.get(), new Hashtable<>(properties.get()));
 
-			return getServiceRegistrationOSGiResult(serviceRegistration, op);
-		});
-	}
+            return getServiceRegistrationOSGiResult(serviceRegistration, op);
+        });
+    }
 
-	private static Hashtable<String, Object> getProperties(
-		Map<String, ?> properties) {
+    private static Hashtable<String, Object> getProperties(
+        Map<String, ?> properties) {
 
-		if (properties == null) {
-			return new Hashtable<>();
-		}
+        if (properties == null) {
+            return new Hashtable<>();
+        }
 
-		return new Hashtable<>(properties);
-	}
+        return new Hashtable<>(properties);
+    }
 
-	private static <T> OSGiResultImpl
-		getServiceRegistrationOSGiResult(
-		ServiceRegistration<?> serviceRegistration,
-		Publisher<? super ServiceRegistration<T>> op) {
+    private static <T> OSGiResultImpl
+        getServiceRegistrationOSGiResult(
+        ServiceRegistration<?> serviceRegistration,
+        Publisher<? super ServiceRegistration<T>> op) {
 
-		@SuppressWarnings("unchecked")
-		OSGiResult terminator = ((Publisher<Object>)op).publish(serviceRegistration);
+        @SuppressWarnings("unchecked")
+        OSGiResult terminator = ((Publisher<Object>)op).publish(serviceRegistration);
 
-		return new OSGiResultImpl(
+        return new OSGiResultImpl(
             () -> {
                 try {
                     serviceRegistration.unregister();
@@ -101,8 +101,8 @@ public class ServiceRegistrationOSGiImpl<T>
                     terminator.run();
                 }
             },
-			terminator::update
-		);
-	}
+            terminator::update
+        );
+    }
 
 }
