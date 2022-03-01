@@ -25,9 +25,9 @@ import org.osgi.framework.BundleContext;
  */
 public class ChangeContextOSGiImpl<T> extends OSGiImpl<T> {
 
-	public ChangeContextOSGiImpl(
+    public ChangeContextOSGiImpl(
         OSGi<T> program, BundleContext bundleContext) {
 
-		super((executionContext, op) -> program.run(new ExecutionContext(bundleContext), op));
-	}
+        super((executionContext, op) -> program.run(new ExecutionContext(bundleContext), op));
+    }
 }

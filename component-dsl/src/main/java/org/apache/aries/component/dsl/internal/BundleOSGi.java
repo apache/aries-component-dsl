@@ -28,50 +28,50 @@ import org.osgi.util.tracker.BundleTrackerCustomizer;
  */
 public class BundleOSGi extends OSGiImpl<Bundle> {
 
-	public BundleOSGi(int stateMask) {
-		super((executionContext, op) -> {
+    public BundleOSGi(int stateMask) {
+        super((executionContext, op) -> {
 
-			BundleTracker<OSGiResult> bundleTracker =
-				new BundleTracker<>(
-					executionContext.getBundleContext(), stateMask,
-					new BundleTrackerCustomizer<OSGiResult>() {
+            BundleTracker<OSGiResult> bundleTracker =
+                new BundleTracker<>(
+                    executionContext.getBundleContext(), stateMask,
+                    new BundleTrackerCustomizer<OSGiResult>() {
 
-						@Override
-						public OSGiResult addingBundle(
-							Bundle bundle, BundleEvent bundleEvent) {
+                        @Override
+                        public OSGiResult addingBundle(
+                            Bundle bundle, BundleEvent bundleEvent) {
 
-							return op.apply(bundle);
-						}
+                            return op.apply(bundle);
+                        }
 
-						@Override
-						public void modifiedBundle(
-							Bundle bundle, BundleEvent bundleEvent,
-							OSGiResult osgiResult) {
+                        @Override
+                        public void modifiedBundle(
+                            Bundle bundle, BundleEvent bundleEvent,
+                            OSGiResult osgiResult) {
 
-							osgiResult.update();
-						}
+                            osgiResult.update();
+                        }
 
-						@Override
-						public void removedBundle(
-							Bundle bundle, BundleEvent bundleEvent,
-							OSGiResult osgiResult) {
+                        @Override
+                        public void removedBundle(
+                            Bundle bundle, BundleEvent bundleEvent,
+                            OSGiResult osgiResult) {
 
-							osgiResult.run();
-						}
-					});
+                            osgiResult.run();
+                        }
+                    });
 
-			bundleTracker.open();
+            bundleTracker.open();
 
-			return new OSGiResultImpl(
-				bundleTracker::close,
-				() -> bundleTracker.getTracked().values().stream().map(
-					OSGiResult::update
-				).reduce(
-					Boolean.FALSE, Boolean::logicalOr
-				)
-			);
-		});
+            return new OSGiResultImpl(
+                bundleTracker::close,
+                () -> bundleTracker.getTracked().values().stream().map(
+                    OSGiResult::update
+                ).reduce(
+                    Boolean.FALSE, Boolean::logicalOr
+                )
+            );
+        });
 
-	}
+    }
 
 }

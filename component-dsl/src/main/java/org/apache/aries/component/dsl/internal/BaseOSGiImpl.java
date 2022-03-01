@@ -34,178 +34,178 @@ import java.util.function.Predicate;
  */
 public class BaseOSGiImpl<T> implements OSGi<T> {
 
-	protected BaseOSGiImpl(OSGiRunnable<T> operation) {
-		_operation = operation;
-	}
+    protected BaseOSGiImpl(OSGiRunnable<T> operation) {
+        _operation = operation;
+    }
 
-	@Override
-	public OSGiResult run(ExecutionContext executionContext) {
-		return run(executionContext, x -> NOOP);
-	}
+    @Override
+    public OSGiResult run(ExecutionContext executionContext) {
+        return run(executionContext, x -> NOOP);
+    }
 
-	public OSGiResult run(
-		ExecutionContext executionContext, Publisher<? super T> op) {
+    public OSGiResult run(
+        ExecutionContext executionContext, Publisher<? super T> op) {
 
-		return _operation.run(executionContext, op);
-	}
+        return _operation.run(executionContext, op);
+    }
 
-	static Filter buildFilter(
-		ExecutionContext executionContext, String filterString, Class<?> clazz) {
+    static Filter buildFilter(
+        ExecutionContext executionContext, String filterString, Class<?> clazz) {
 
-		Filter filter;
+        Filter filter;
 
-		String string = buildFilterString(filterString, clazz);
+        String string = buildFilterString(filterString, clazz);
 
-		try {
-			filter = executionContext.getBundleContext().createFilter(string);
-		}
-		catch (InvalidSyntaxException e) {
-			throw new RuntimeException(e);
-		}
+        try {
+            filter = executionContext.getBundleContext().createFilter(string);
+        }
+        catch (InvalidSyntaxException e) {
+            throw new RuntimeException(e);
+        }
 
-		return filter;
-	}
+        return filter;
+    }
 
-	static String buildFilterString(String filterString, Class<?> clazz) {
-		if (filterString == null && clazz == null) {
-			throw new IllegalArgumentException(
-				"Both filterString and clazz can't be null");
-		}
+    static String buildFilterString(String filterString, Class<?> clazz) {
+        if (filterString == null && clazz == null) {
+            throw new IllegalArgumentException(
+                "Both filterString and clazz can't be null");
+        }
 
-		StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
 
-		if (filterString != null) {
-			stringBuilder.append(filterString);
-		}
+        if (filterString != null) {
+            stringBuilder.append(filterString);
+        }
 
-		if (clazz != null) {
-			boolean extend = !(stringBuilder.length() == 0);
-			if (extend) {
-				stringBuilder.insert(0, "(&");
-			}
+        if (clazz != null) {
+            boolean extend = !(stringBuilder.length() == 0);
+            if (extend) {
+                stringBuilder.insert(0, "(&");
+            }
 
-			stringBuilder.
-				append("(objectClass=").
-				append(clazz.getName()).
-				append(")");
+            stringBuilder.
+                append("(objectClass=").
+                append(clazz.getName()).
+                append(")");
 
-			if (extend) {
-				stringBuilder.append(")");
-			}
+            if (extend) {
+                stringBuilder.append(")");
+            }
 
-		}
+        }
 
-		return stringBuilder.toString();
-	}
+        return stringBuilder.toString();
+    }
 
-	OSGiRunnable<T> _operation;
+    OSGiRunnable<T> _operation;
 
-	@Override
-	public <S> OSGi<S> applyTo(OSGi<Function<T, S>> fun) {
-		return new BaseOSGiImpl<>((executionContext, op) -> {
-			ConcurrentDoublyLinkedList<T> identities = new ConcurrentDoublyLinkedList<>();
-			ConcurrentDoublyLinkedList<Function<T,S>> functions = new ConcurrentDoublyLinkedList<>();
-			IdentityHashMap<T, IdentityHashMap<Function<T, S>, OSGiResult>>
-				terminators = new IdentityHashMap<>();
+    @Override
+    public <S> OSGi<S> applyTo(OSGi<Function<T, S>> fun) {
+        return new BaseOSGiImpl<>((executionContext, op) -> {
+            ConcurrentDoublyLinkedList<T> identities = new ConcurrentDoublyLinkedList<>();
+            ConcurrentDoublyLinkedList<Function<T,S>> functions = new ConcurrentDoublyLinkedList<>();
+            IdentityHashMap<T, IdentityHashMap<Function<T, S>, OSGiResult>>
+                terminators = new IdentityHashMap<>();
 
-			OSGiResult funRun = fun.run(
-				executionContext,
-				op.pipe(f -> {
-					synchronized(identities) {
-						ConcurrentDoublyLinkedList.Node node = functions.addLast(f);
+            OSGiResult funRun = fun.run(
+                executionContext,
+                op.pipe(f -> {
+                    synchronized(identities) {
+                        ConcurrentDoublyLinkedList.Node node = functions.addLast(f);
 
-						for (T t : identities) {
-							IdentityHashMap<Function<T, S>, OSGiResult> terminatorMap =
-								terminators.computeIfAbsent(
-									t, __ -> new IdentityHashMap<>());
-							terminatorMap.put(f, op.apply(f.apply(t)));
-						}
+                        for (T t : identities) {
+                            IdentityHashMap<Function<T, S>, OSGiResult> terminatorMap =
+                                terminators.computeIfAbsent(
+                                    t, __ -> new IdentityHashMap<>());
+                            terminatorMap.put(f, op.apply(f.apply(t)));
+                        }
 
-						return new OSGiResultImpl(
-							() -> {
-								synchronized (identities) {
-									node.remove();
+                        return new OSGiResultImpl(
+                            () -> {
+                                synchronized (identities) {
+                                    node.remove();
 
-									identities.forEach(t -> {
-										Runnable terminator = terminators.get(t).remove(f);
+                                    identities.forEach(t -> {
+                                        Runnable terminator = terminators.get(t).remove(f);
 
-										terminator.run();
-									});
-								}
-							},
-							() -> {
-								synchronized (identities) {
-									return identities.stream().map(t -> {
-										OSGiResult terminator = terminators.get(t).get(f);
+                                        terminator.run();
+                                    });
+                                }
+                            },
+                            () -> {
+                                synchronized (identities) {
+                                    return identities.stream().map(t -> {
+                                        OSGiResult terminator = terminators.get(t).get(f);
 
-										return terminator.update();
-									}).reduce(
-										Boolean.FALSE, Boolean::logicalOr
-									);
-								}
-							}
-						);
-					}
-				}
-			));
+                                        return terminator.update();
+                                    }).reduce(
+                                        Boolean.FALSE, Boolean::logicalOr
+                                    );
+                                }
+                            }
+                        );
+                    }
+                }
+            ));
 
-			OSGiResult myRun = run(
-				executionContext,
-				op.pipe(t -> {
-					synchronized (identities) {
-						ConcurrentDoublyLinkedList.Node node = identities.addLast(t);
+            OSGiResult myRun = run(
+                executionContext,
+                op.pipe(t -> {
+                    synchronized (identities) {
+                        ConcurrentDoublyLinkedList.Node node = identities.addLast(t);
 
-						for (Function<T, S> f : functions) {
-							IdentityHashMap<Function<T, S>, OSGiResult> terminatorMap =
-								terminators.computeIfAbsent(
-									t, __ -> new IdentityHashMap<>());
-							terminatorMap.put(f, op.apply(f.apply(t)));
-						}
+                        for (Function<T, S> f : functions) {
+                            IdentityHashMap<Function<T, S>, OSGiResult> terminatorMap =
+                                terminators.computeIfAbsent(
+                                    t, __ -> new IdentityHashMap<>());
+                            terminatorMap.put(f, op.apply(f.apply(t)));
+                        }
 
-						return new OSGiResultImpl(
-							() -> {
-								synchronized (identities) {
-									node.remove();
+                        return new OSGiResultImpl(
+                            () -> {
+                                synchronized (identities) {
+                                    node.remove();
 
-									functions.forEach(f -> {
-										Runnable terminator = terminators.get(t).remove(f);
+                                    functions.forEach(f -> {
+                                        Runnable terminator = terminators.get(t).remove(f);
 
-										terminator.run();
-									});
-								}
-							},
-							() -> {
-								synchronized (identities) {
-									return functions.stream().map(f -> {
-										OSGiResult terminator = terminators.get(t).get(f);
+                                        terminator.run();
+                                    });
+                                }
+                            },
+                            () -> {
+                                synchronized (identities) {
+                                    return functions.stream().map(f -> {
+                                        OSGiResult terminator = terminators.get(t).get(f);
 
-										return terminator.update();
-									}).reduce(
-										Boolean.FALSE, Boolean::logicalOr
-									);
-								}
-							}
-						);
-					}
-				})
-			);
+                                        return terminator.update();
+                                    }).reduce(
+                                        Boolean.FALSE, Boolean::logicalOr
+                                    );
+                                }
+                            }
+                        );
+                    }
+                })
+            );
 
-			return new AggregateOSGiResult(myRun, funRun);
-		});
-	}
+            return new AggregateOSGiResult(myRun, funRun);
+        });
+    }
 
-	@Override
-	public <S> OSGi<S> choose(
-		Function<T, OSGi<Boolean>> chooser, Function<OSGi<T>, OSGi<S>> then,
-		Function<OSGi<T>, OSGi<S>> otherwise) {
+    @Override
+    public <S> OSGi<S> choose(
+        Function<T, OSGi<Boolean>> chooser, Function<OSGi<T>, OSGi<S>> then,
+        Function<OSGi<T>, OSGi<S>> otherwise) {
 
-		return new BaseOSGiImpl<>((executionContext, op) -> {
-			Pad<T, S> thenPad = new Pad<>(executionContext, then, op);
-			Pad<T, S> elsePad = new Pad<>(executionContext, otherwise, op);
+        return new BaseOSGiImpl<>((executionContext, op) -> {
+            Pad<T, S> thenPad = new Pad<>(executionContext, then, op);
+            Pad<T, S> elsePad = new Pad<>(executionContext, otherwise, op);
 
-			OSGiResult result = run(
-				executionContext,
-				op.pipe(t -> chooser.apply(t).run(
+            OSGiResult result = run(
+                executionContext,
+                op.pipe(t -> chooser.apply(t).run(
                     executionContext,
                     b -> {
                         if (b) {
@@ -215,189 +215,189 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
                         }
                     }
                 )));
-			return new AggregateOSGiResult(thenPad, elsePad, result);
-		});
-	}
+            return new AggregateOSGiResult(thenPad, elsePad, result);
+        });
+    }
 
-	@Override
-	public <S> OSGi<S> distribute(@SuppressWarnings("unchecked") Function<OSGi<T>, OSGi<S>>... funs) {
-		return new DistributeOSGiImpl<>(this, funs);
-	}
+    @Override
+    public <S> OSGi<S> distribute(@SuppressWarnings("unchecked") Function<OSGi<T>, OSGi<S>>... funs) {
+        return new DistributeOSGiImpl<>(this, funs);
+    }
 
-	@Override
-	public OSGi<T> effects(
-		Consumer<? super T> onAddedBefore, Consumer<? super T> onAddedAfter,
-		Consumer<? super T> onRemovedBefore,
-		Consumer<? super T> onRemovedAfter,
-		Consumer<? super T> onUpdate) {
+    @Override
+    public OSGi<T> effects(
+        Consumer<? super T> onAddedBefore, Consumer<? super T> onAddedAfter,
+        Consumer<? super T> onRemovedBefore,
+        Consumer<? super T> onRemovedAfter,
+        Consumer<? super T> onUpdate) {
 
-		return transform(op -> t -> {
-			onAddedBefore.accept(t);
+        return transform(op -> t -> {
+            onAddedBefore.accept(t);
 
-			try {
-				OSGiResult terminator = op.publish(t);
+            try {
+                OSGiResult terminator = op.publish(t);
 
-				OSGiResult result = new OSGiResultImpl(() -> {
-					try {
-						onRemovedBefore.accept(t);
-					}
-					catch (Exception e) {
-						//TODO: logging
-					}
+                OSGiResult result = new OSGiResultImpl(() -> {
+                    try {
+                        onRemovedBefore.accept(t);
+                    }
+                    catch (Exception e) {
+                        //TODO: logging
+                    }
 
-					try {
-						terminator.run();
-					}
-					catch (Exception e) {
-						//TODO: logging
-					}
+                    try {
+                        terminator.run();
+                    }
+                    catch (Exception e) {
+                        //TODO: logging
+                    }
 
-					try {
-						onRemovedAfter.accept(t);
-					}
-					catch (Exception e) {
-						//TODO: logging
-					}
-				},
-					() -> {
-						AtomicBoolean atomicBoolean = new AtomicBoolean();
+                    try {
+                        onRemovedAfter.accept(t);
+                    }
+                    catch (Exception e) {
+                        //TODO: logging
+                    }
+                },
+                    () -> {
+                        AtomicBoolean atomicBoolean = new AtomicBoolean();
 
-						UpdateSupport.deferPublication(() -> {
-							if (!atomicBoolean.get()) {
-								onUpdate.accept(t);
-							}
-						});
+                        UpdateSupport.deferPublication(() -> {
+                            if (!atomicBoolean.get()) {
+                                onUpdate.accept(t);
+                            }
+                        });
 
-						atomicBoolean.set(terminator.update());
+                        atomicBoolean.set(terminator.update());
 
-						return atomicBoolean.get();
-					}
-				);
+                        return atomicBoolean.get();
+                    }
+                );
 
-				try {
-					onAddedAfter.accept(t);
-				}
-				catch (Exception e) {
-					result.run();
+                try {
+                    onAddedAfter.accept(t);
+                }
+                catch (Exception e) {
+                    result.run();
 
-					throw e;
-				}
+                    throw e;
+                }
 
-				return result;
-			}
-			catch (Exception e) {
-				try {
-					onRemovedAfter.accept(t);
-				}
-				catch (Exception e1) {
-					//TODO: logging
-				}
+                return result;
+            }
+            catch (Exception e) {
+                try {
+                    onRemovedAfter.accept(t);
+                }
+                catch (Exception e1) {
+                    //TODO: logging
+                }
 
-				throw e;
-			}
-				}
-		);
-	}
+                throw e;
+            }
+                }
+        );
+    }
 
-	@Override
-	public OSGi<T> filter(Predicate<T> predicate) {
-		return transform(
-			op -> t -> {
-				if (predicate.test(t)) {
-					return op.apply(t);
-				}
-				else {
-					return NOOP;
-				}
-			}
-		);
-	}
+    @Override
+    public OSGi<T> filter(Predicate<T> predicate) {
+        return transform(
+            op -> t -> {
+                if (predicate.test(t)) {
+                    return op.apply(t);
+                }
+                else {
+                    return NOOP;
+                }
+            }
+        );
+    }
 
-	@Override
-	public <S> OSGi<S> flatMap(Function<? super T, OSGi<? extends S>> fun) {
-		return new BaseOSGiImpl<>((executionContext, op) ->
-			run(executionContext, op.pipe(t -> fun.apply(t).run(executionContext, op))));
-	}
+    @Override
+    public <S> OSGi<S> flatMap(Function<? super T, OSGi<? extends S>> fun) {
+        return new BaseOSGiImpl<>((executionContext, op) ->
+            run(executionContext, op.pipe(t -> fun.apply(t).run(executionContext, op))));
+    }
 
-	@Override
-	public <S> OSGi<S> map(Function<? super T, ? extends S> function) {
-		return transform(op -> t -> op.apply(function.apply(t)));
-	}
+    @Override
+    public <S> OSGi<S> map(Function<? super T, ? extends S> function) {
+        return transform(op -> t -> op.apply(function.apply(t)));
+    }
 
-	@Deprecated
-	@Override
-	public OSGi<T> recover(BiFunction<T, Exception, T> onError) {
-		return new BaseOSGiImpl<>((executionContext, op) ->
-			run(
-				executionContext,
-				t -> {
-					try {
-						return op.apply(t);
-					}
-					catch (Exception e) {
-						return op.apply(onError.apply(t, e));
-					}
-				}
-			));
-	}
+    @Deprecated
+    @Override
+    public OSGi<T> recover(BiFunction<T, Exception, T> onError) {
+        return new BaseOSGiImpl<>((executionContext, op) ->
+            run(
+                executionContext,
+                t -> {
+                    try {
+                        return op.apply(t);
+                    }
+                    catch (Exception e) {
+                        return op.apply(onError.apply(t, e));
+                    }
+                }
+            ));
+    }
 
-	@Deprecated
-	@Override
-	public OSGi<T> recoverWith(BiFunction<T, Exception, OSGi<T>> onError) {
-		return new BaseOSGiImpl<>((executionContext, op) ->
-			run(
-				executionContext,
-				t -> {
-					try {
-						return op.apply(t);
-					}
-					catch (Exception e) {
-						return onError.apply(t, e).run(executionContext, op);
-					}
-				}
-			));
-	}
+    @Deprecated
+    @Override
+    public OSGi<T> recoverWith(BiFunction<T, Exception, OSGi<T>> onError) {
+        return new BaseOSGiImpl<>((executionContext, op) ->
+            run(
+                executionContext,
+                t -> {
+                    try {
+                        return op.apply(t);
+                    }
+                    catch (Exception e) {
+                        return onError.apply(t, e).run(executionContext, op);
+                    }
+                }
+            ));
+    }
 
-	@Override
-	public <K, S> OSGi<S> splitBy(
-		Function<T, OSGi<K>> mapper, BiFunction<K, OSGi<T>, OSGi<S>> fun) {
+    @Override
+    public <K, S> OSGi<S> splitBy(
+        Function<T, OSGi<K>> mapper, BiFunction<K, OSGi<T>, OSGi<S>> fun) {
 
-		return new BaseOSGiImpl<>((executionContext, op) -> {
-			ConcurrentHashMap<K, Pad<T, S>> pads = new ConcurrentHashMap<>();
+        return new BaseOSGiImpl<>((executionContext, op) -> {
+            ConcurrentHashMap<K, Pad<T, S>> pads = new ConcurrentHashMap<>();
 
-			OSGiResult result = run(
-				executionContext,
-				op.pipe(t -> mapper.apply(t).run(
-					executionContext,
-					k -> pads.computeIfAbsent(
-						k,
-						__ -> new Pad<>(
-							executionContext,
-							___ -> fun.apply(k, ___), op)
-					).publish(t)
-				)
-			));
+            OSGiResult result = run(
+                executionContext,
+                op.pipe(t -> mapper.apply(t).run(
+                    executionContext,
+                    k -> pads.computeIfAbsent(
+                        k,
+                        __ -> new Pad<>(
+                            executionContext,
+                            ___ -> fun.apply(k, ___), op)
+                    ).publish(t)
+                )
+            ));
 
-			return new OSGiResultImpl(
-				() -> {
-					pads.values().forEach(Pad::close);
+            return new OSGiResultImpl(
+                () -> {
+                    pads.values().forEach(Pad::close);
 
-					result.close();
-				},
-				() -> pads.values().stream().map(
-					Pad::update
-				).reduce(
-					Boolean.FALSE, Boolean::logicalOr
-				) | result.update()
-			);
-		});
-	}
+                    result.close();
+                },
+                () -> pads.values().stream().map(
+                    Pad::update
+                ).reduce(
+                    Boolean.FALSE, Boolean::logicalOr
+                ) | result.update()
+            );
+        });
+    }
 
-	@Override
-	public <S> OSGi<S> transform(Transformer<T, S> fun) {
-		return new BaseOSGiImpl<>((executionContext, op) -> run(
-				executionContext, op.pipe(fun.transform(op)::apply)));
-	}
+    @Override
+    public <S> OSGi<S> transform(Transformer<T, S> fun) {
+        return new BaseOSGiImpl<>((executionContext, op) -> run(
+                executionContext, op.pipe(fun.transform(op)::apply)));
+    }
 
 }
 

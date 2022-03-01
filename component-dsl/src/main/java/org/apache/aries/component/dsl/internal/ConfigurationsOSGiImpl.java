@@ -38,199 +38,199 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class ConfigurationsOSGiImpl extends OSGiImpl<ConfigurationHolder> {
 
-	public ConfigurationsOSGiImpl(String factoryPid) {
-		super((executionContext, op) -> {
-			ConcurrentHashMap<String, Long> configurationCounters =
-				new ConcurrentHashMap<>();
+    public ConfigurationsOSGiImpl(String factoryPid) {
+        super((executionContext, op) -> {
+            ConcurrentHashMap<String, Long> configurationCounters =
+                new ConcurrentHashMap<>();
 
-			ConcurrentHashMap<String, OSGiResult> terminators =
-				new ConcurrentHashMap<>();
+            ConcurrentHashMap<String, OSGiResult> terminators =
+                new ConcurrentHashMap<>();
 
-			AtomicBoolean closed = new AtomicBoolean();
+            AtomicBoolean closed = new AtomicBoolean();
 
-			CountDownLatch countDownLatch = new CountDownLatch(1);
+            CountDownLatch countDownLatch = new CountDownLatch(1);
 
-			final BundleContext bundleContext = executionContext.getBundleContext();
+            final BundleContext bundleContext = executionContext.getBundleContext();
 
-			ServiceRegistration<?> serviceRegistration =
-				bundleContext.registerService(
-					ConfigurationListener.class,
-					(ConfigurationEvent configurationEvent) -> {
-						String incomingFactoryPid =
-							configurationEvent.getFactoryPid();
+            ServiceRegistration<?> serviceRegistration =
+                bundleContext.registerService(
+                    ConfigurationListener.class,
+                    (ConfigurationEvent configurationEvent) -> {
+                        String incomingFactoryPid =
+                            configurationEvent.getFactoryPid();
 
-						if (!factoryPid.equals(incomingFactoryPid)) {
-							return;
-						}
+                        if (!factoryPid.equals(incomingFactoryPid)) {
+                            return;
+                        }
 
-						try {
-							countDownLatch.await(1, TimeUnit.MINUTES);
-						}
-						catch (InterruptedException e) {
-							return;
-						}
+                        try {
+                            countDownLatch.await(1, TimeUnit.MINUTES);
+                        }
+                        catch (InterruptedException e) {
+                            return;
+                        }
 
-						String pid = configurationEvent.getPid();
+                        String pid = configurationEvent.getPid();
 
-						Configuration configuration;
+                        Configuration configuration;
 
-						if (configurationEvent.getType() ==
-							ConfigurationEvent.CM_DELETED) {
+                        if (configurationEvent.getType() ==
+                            ConfigurationEvent.CM_DELETED) {
 
-							configurationCounters.remove(pid);
+                            configurationCounters.remove(pid);
 
-							signalLeave(pid, terminators);
-						}
-						else {
-							configuration = getConfiguration(
-								bundleContext, configurationEvent);
+                            signalLeave(pid, terminators);
+                        }
+                        else {
+                            configuration = getConfiguration(
+                                bundleContext, configurationEvent);
 
-							Long oldChangeCount = configurationCounters.putIfAbsent(
-								pid, configuration.getChangeCount());
+                            Long oldChangeCount = configurationCounters.putIfAbsent(
+                                pid, configuration.getChangeCount());
 
-							if (oldChangeCount != null) {
-								if (oldChangeCount == configuration.getChangeCount()) {
-									return;
-								}
+                            if (oldChangeCount != null) {
+                                if (oldChangeCount == configuration.getChangeCount()) {
+                                    return;
+                                }
 
-								OSGiResult osgiResult = terminators.get(pid);
+                                OSGiResult osgiResult = terminators.get(pid);
 
-								if (osgiResult != null && !UpdateSupport.sendUpdate(osgiResult)) {
-									return;
-								}
-							}
+                                if (osgiResult != null && !UpdateSupport.sendUpdate(osgiResult)) {
+                                    return;
+                                }
+                            }
 
-							UpdateSupport.runUpdate(() -> {
-								signalLeave(pid, terminators);
+                            UpdateSupport.runUpdate(() -> {
+                                signalLeave(pid, terminators);
 
-								terminators.put(
-									pid, op.apply(new ConfigurationHolderImpl(configuration)));
-							});
+                                terminators.put(
+                                    pid, op.apply(new ConfigurationHolderImpl(configuration)));
+                            });
 
-							if (closed.get()) {
-							/*
-							if we have closed while executing the
-							effects we have to execute the terminator
-							directly instead of storing it
-							*/
-								signalLeave(pid, terminators);
-							}
-						}
-					},
-					new Hashtable<>());
+                            if (closed.get()) {
+                            /*
+                            if we have closed while executing the
+                            effects we have to execute the terminator
+                            directly instead of storing it
+                            */
+                                signalLeave(pid, terminators);
+                            }
+                        }
+                    },
+                    new Hashtable<>());
 
-			ServiceReference<ConfigurationAdmin> serviceReference =
-				bundleContext.getServiceReference(ConfigurationAdmin.class);
+            ServiceReference<ConfigurationAdmin> serviceReference =
+                bundleContext.getServiceReference(ConfigurationAdmin.class);
 
-			if (serviceReference != null) {
-				Configuration[] configurations = getConfigurations(
-					bundleContext, factoryPid, serviceReference);
+            if (serviceReference != null) {
+                Configuration[] configurations = getConfigurations(
+                    bundleContext, factoryPid, serviceReference);
 
-				for (Configuration configuration : configurations) {
-					configurationCounters.put(
-						configuration.getPid(), configuration.getChangeCount());
+                for (Configuration configuration : configurations) {
+                    configurationCounters.put(
+                        configuration.getPid(), configuration.getChangeCount());
 
-					terminators.put(
-						configuration.getPid(),
-						op.publish(new ConfigurationHolderImpl(configuration)));
-				}
-			}
+                    terminators.put(
+                        configuration.getPid(),
+                        op.publish(new ConfigurationHolderImpl(configuration)));
+                }
+            }
 
-			countDownLatch.countDown();
+            countDownLatch.countDown();
 
-			return new OSGiResultImpl(
-				() -> {
-					closed.set(true);
+            return new OSGiResultImpl(
+                () -> {
+                    closed.set(true);
 
-					serviceRegistration.unregister();
+                    serviceRegistration.unregister();
 
-					for (Runnable runnable : terminators.values()) {
-						if (runnable != null) {
-							runnable.run();
-						}
-					}
-				},
-				() -> terminators.values().stream().map(
-					OSGiResult::update
-				).reduce(
-					Boolean.FALSE, Boolean::logicalOr
-				));
-		});
-	}
+                    for (Runnable runnable : terminators.values()) {
+                        if (runnable != null) {
+                            runnable.run();
+                        }
+                    }
+                },
+                () -> terminators.values().stream().map(
+                    OSGiResult::update
+                ).reduce(
+                    Boolean.FALSE, Boolean::logicalOr
+                ));
+        });
+    }
 
-	private static Configuration getConfiguration(
-		BundleContext bundleContext, ConfigurationEvent configurationEvent) {
+    private static Configuration getConfiguration(
+        BundleContext bundleContext, ConfigurationEvent configurationEvent) {
 
-		String pid = configurationEvent.getPid();
-		String factoryPid = configurationEvent.getFactoryPid();
+        String pid = configurationEvent.getPid();
+        String factoryPid = configurationEvent.getFactoryPid();
 
-		ServiceReference<ConfigurationAdmin> reference =
-			configurationEvent.getReference();
+        ServiceReference<ConfigurationAdmin> reference =
+            configurationEvent.getReference();
 
-		return getConfiguration(bundleContext, pid, factoryPid, reference);
-	}
+        return getConfiguration(bundleContext, pid, factoryPid, reference);
+    }
 
-	private static Configuration getConfiguration(
-		BundleContext bundleContext, String pid, String factoryPid,
-		ServiceReference<ConfigurationAdmin> reference) {
+    private static Configuration getConfiguration(
+        BundleContext bundleContext, String pid, String factoryPid,
+        ServiceReference<ConfigurationAdmin> reference) {
 
-		ConfigurationAdmin configurationAdmin = bundleContext.getService(
-			reference);
+        ConfigurationAdmin configurationAdmin = bundleContext.getService(
+            reference);
 
-		try {
-			Configuration[] configurations =
-				configurationAdmin.listConfigurations(
-					"(&(service.pid=" + pid + ")" +
-						"(service.factoryPid="+ factoryPid + "))");
+        try {
+            Configuration[] configurations =
+                configurationAdmin.listConfigurations(
+                    "(&(service.pid=" + pid + ")" +
+                        "(service.factoryPid="+ factoryPid + "))");
 
-			if (configurations == null || configurations.length == 0) {
-				return null;
-			}
+            if (configurations == null || configurations.length == 0) {
+                return null;
+            }
 
-			return configurations[0];
-		}
-		catch (Exception e) {
-			return null;
-		}
-		finally {
-			bundleContext.ungetService(reference);
-		}
-	}
+            return configurations[0];
+        }
+        catch (Exception e) {
+            return null;
+        }
+        finally {
+            bundleContext.ungetService(reference);
+        }
+    }
 
-	private static Configuration[] getConfigurations(
-		BundleContext bundleContext, String factoryPid,
-		ServiceReference<ConfigurationAdmin> serviceReference) {
+    private static Configuration[] getConfigurations(
+        BundleContext bundleContext, String factoryPid,
+        ServiceReference<ConfigurationAdmin> serviceReference) {
 
-		ConfigurationAdmin configurationAdmin = bundleContext.getService(
-			serviceReference);
+        ConfigurationAdmin configurationAdmin = bundleContext.getService(
+            serviceReference);
 
-		try {
-			Configuration[] configurations =
-				configurationAdmin.listConfigurations(
-					"(&(service.pid=*)(service.factoryPid="+ factoryPid +"))");
+        try {
+            Configuration[] configurations =
+                configurationAdmin.listConfigurations(
+                    "(&(service.pid=*)(service.factoryPid="+ factoryPid +"))");
 
-			if (configurations == null) {
-				return new Configuration[0];
-			}
+            if (configurations == null) {
+                return new Configuration[0];
+            }
 
-			return configurations;
-		}
-		catch (Exception e) {
-			return new Configuration[0];
-		}
-		finally {
-			bundleContext.ungetService(serviceReference);
-		}
-	}
+            return configurations;
+        }
+        catch (Exception e) {
+            return new Configuration[0];
+        }
+        finally {
+            bundleContext.ungetService(serviceReference);
+        }
+    }
 
-	private static void signalLeave(
-		String factoryPid, ConcurrentHashMap<String, OSGiResult> terminators) {
+    private static void signalLeave(
+        String factoryPid, ConcurrentHashMap<String, OSGiResult> terminators) {
 
-		OSGiResult osgiResult = terminators.remove(factoryPid);
+        OSGiResult osgiResult = terminators.remove(factoryPid);
 
-		if (osgiResult != null) {
-			osgiResult.run();
-		}
-	}
+        if (osgiResult != null) {
+            osgiResult.run();
+        }
+    }
 
 }

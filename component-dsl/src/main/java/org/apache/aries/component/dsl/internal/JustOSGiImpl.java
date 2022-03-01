@@ -32,49 +32,49 @@ import java.util.function.Supplier;
  */
 public class JustOSGiImpl<T> extends OSGiImpl<T> {
 
-	public JustOSGiImpl(Collection<T> t) {
-		this(() -> t);
-	}
+    public JustOSGiImpl(Collection<T> t) {
+        this(() -> t);
+    }
 
-	public JustOSGiImpl(Supplier<Collection<T>> supplier) {
-		super((executionContext, op) -> {
+    public JustOSGiImpl(Supplier<Collection<T>> supplier) {
+        super((executionContext, op) -> {
 
-			Collection<T> collection = supplier.get();
-			ArrayList<OSGiResult> references = new ArrayList<>(collection.size());
+            Collection<T> collection = supplier.get();
+            ArrayList<OSGiResult> references = new ArrayList<>(collection.size());
 
-			try {
-				for (T t : collection) {
-					references.add(op.publish(t));
-				}
-			}
-			catch (Exception e) {
-				cleanUp(references);
+            try {
+                for (T t : collection) {
+                    references.add(op.publish(t));
+                }
+            }
+            catch (Exception e) {
+                cleanUp(references);
 
-				throw e;
-			}
+                throw e;
+            }
 
-			return new OSGiResultImpl(
-				() -> cleanUp(references),
-				() -> references.stream().map(res -> res.update()).reduce(Boolean.FALSE, Boolean::logicalOr)
-			);
-		});
-	}
+            return new OSGiResultImpl(
+                () -> cleanUp(references),
+                () -> references.stream().map(res -> res.update()).reduce(Boolean.FALSE, Boolean::logicalOr)
+            );
+        });
+    }
 
-	private static void cleanUp(ArrayList<OSGiResult> references) {
-		ListIterator<OSGiResult> iterator =
-			references.listIterator(references.size());
+    private static void cleanUp(ArrayList<OSGiResult> references) {
+        ListIterator<OSGiResult> iterator =
+            references.listIterator(references.size());
 
-		while (iterator.hasPrevious()) {
-			try {
-				iterator.previous().run();
-			}
-			catch (Exception e) {
-			}
-		}
-	}
+        while (iterator.hasPrevious()) {
+            try {
+                iterator.previous().run();
+            }
+            catch (Exception e) {
+            }
+        }
+    }
 
-	public JustOSGiImpl(T t) {
-		this(() -> Collections.singletonList(t));
-	}
+    public JustOSGiImpl(T t) {
+        this(() -> Collections.singletonList(t));
+    }
 
 }

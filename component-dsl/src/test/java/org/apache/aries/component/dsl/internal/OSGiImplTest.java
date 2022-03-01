@@ -26,29 +26,29 @@ import static org.junit.Assert.assertEquals;
  */
 public class OSGiImplTest {
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testBuildFilterThrowsIllegalArgument() {
-		OSGiImpl.buildFilterString(null, null);
-	}
+    @Test(expected = IllegalArgumentException.class)
+    public void testBuildFilterThrowsIllegalArgument() {
+        OSGiImpl.buildFilterString(null, null);
+    }
 
-	@Test
-	public void testBuildFilterWithBothArguments() {
-		assertEquals(
-			"(&(filter=*)(objectClass=java.lang.String))",
-			OSGiImpl.buildFilterString("(filter=*)", String.class));
-	}
+    @Test
+    public void testBuildFilterWithBothArguments() {
+        assertEquals(
+            "(&(filter=*)(objectClass=java.lang.String))",
+            OSGiImpl.buildFilterString("(filter=*)", String.class));
+    }
 
-	@Test
-	public void testBuildFilterWithFilterOnly() {
-		assertEquals(
-			"(filter=*)", OSGiImpl.buildFilterString("(filter=*)", null));
-	}
+    @Test
+    public void testBuildFilterWithFilterOnly() {
+        assertEquals(
+            "(filter=*)", OSGiImpl.buildFilterString("(filter=*)", null));
+    }
 
-	@Test
-	public void testBuildFilterWithClassOnly() {
-		assertEquals(
-			"(objectClass=java.lang.String)",
-			OSGiImpl.buildFilterString(null, String.class));
-	}
+    @Test
+    public void testBuildFilterWithClassOnly() {
+        assertEquals(
+            "(objectClass=java.lang.String)",
+            OSGiImpl.buildFilterString(null, String.class));
+    }
 
 }

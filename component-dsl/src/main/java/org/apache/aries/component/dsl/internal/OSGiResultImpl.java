@@ -27,29 +27,29 @@ import java.util.function.Supplier;
  */
 public class OSGiResultImpl implements OSGiResult {
 
-	public OSGiResultImpl(Runnable close, Supplier<Boolean> onUpdate) {
-		this.close = close;
-		this.onUpdate = onUpdate;
-	}
+    public OSGiResultImpl(Runnable close, Supplier<Boolean> onUpdate) {
+        this.close = close;
+        this.onUpdate = onUpdate;
+    }
 
-	@Override
-	public void close() {
-		if (_closed.compareAndSet(false, true)) {
-			close.run();
-		}
-	}
+    @Override
+    public void close() {
+        if (_closed.compareAndSet(false, true)) {
+            close.run();
+        }
+    }
 
-	@Override
-	public boolean update() {
-		if (_closed.get()) {
-			return false;
-		}
+    @Override
+    public boolean update() {
+        if (_closed.get()) {
+            return false;
+        }
 
-		return onUpdate.get();
-	}
+        return onUpdate.get();
+    }
 
-	private final Runnable close;
-	private Supplier<Boolean> onUpdate;
-	private AtomicBoolean _closed = new AtomicBoolean();
+    private final Runnable close;
+    private Supplier<Boolean> onUpdate;
+    private AtomicBoolean _closed = new AtomicBoolean();
 
 }

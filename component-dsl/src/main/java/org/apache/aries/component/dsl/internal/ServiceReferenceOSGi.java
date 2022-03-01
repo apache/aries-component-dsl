@@ -28,86 +28,86 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  * @author Carlos Sierra Andrés
  */
 public class ServiceReferenceOSGi<T>
-	extends OSGiImpl<CachingServiceReference<T>> {
+    extends OSGiImpl<CachingServiceReference<T>> {
 
-	public ServiceReferenceOSGi(Class<T> clazz, String filterString) {
+    public ServiceReferenceOSGi(Class<T> clazz, String filterString) {
 
-		super((executionContext, op) -> {
-			ServiceTracker<T, Tracked<T>>
-				serviceTracker = new ServiceTracker<>(
-					executionContext.getBundleContext(),
-					buildFilter(executionContext, filterString, clazz),
-					new DefaultServiceTrackerCustomizer<>(op));
+        super((executionContext, op) -> {
+            ServiceTracker<T, Tracked<T>>
+                serviceTracker = new ServiceTracker<>(
+                    executionContext.getBundleContext(),
+                    buildFilter(executionContext, filterString, clazz),
+                    new DefaultServiceTrackerCustomizer<>(op));
 
-			serviceTracker.open();
+            serviceTracker.open();
 
-			return new OSGiResultImpl(
-				serviceTracker::close,
-				() -> serviceTracker.getTracked().values().stream().map(
-					tracked -> tracked.runnable.update()
-				).reduce(
-					Boolean.FALSE, Boolean::logicalOr
-				)
-			);
-		});
-	}
+            return new OSGiResultImpl(
+                serviceTracker::close,
+                () -> serviceTracker.getTracked().values().stream().map(
+                    tracked -> tracked.runnable.update()
+                ).reduce(
+                    Boolean.FALSE, Boolean::logicalOr
+                )
+            );
+        });
+    }
 
-	private static class DefaultServiceTrackerCustomizer<T>
-		implements ServiceTrackerCustomizer<T, Tracked<T>> {
+    private static class DefaultServiceTrackerCustomizer<T>
+        implements ServiceTrackerCustomizer<T, Tracked<T>> {
 
-		public DefaultServiceTrackerCustomizer(
-			Publisher<? super CachingServiceReference<T>> addedSource) {
+        public DefaultServiceTrackerCustomizer(
+            Publisher<? super CachingServiceReference<T>> addedSource) {
 
-			_addedSource = addedSource;
-		}
+            _addedSource = addedSource;
+        }
 
-		@Override
-		public Tracked<T> addingService(ServiceReference<T> reference) {
-			CachingServiceReference<T> cachingServiceReference =
-				new CachingServiceReference<>(reference);
+        @Override
+        public Tracked<T> addingService(ServiceReference<T> reference) {
+            CachingServiceReference<T> cachingServiceReference =
+                new CachingServiceReference<>(reference);
 
-			return new Tracked<>(
-				cachingServiceReference, _addedSource.apply(cachingServiceReference));
-		}
+            return new Tracked<>(
+                cachingServiceReference, _addedSource.apply(cachingServiceReference));
+        }
 
-		@Override
-		public void modifiedService(
-			ServiceReference<T> reference, Tracked<T> tracked) {
+        @Override
+        public void modifiedService(
+            ServiceReference<T> reference, Tracked<T> tracked) {
 
-			if (UpdateSupport.sendUpdate(tracked.runnable)) {
-				UpdateSupport.runUpdate(() -> {
-					tracked.runnable.run();
-					tracked.cachingServiceReference = new CachingServiceReference<>(
-						reference);
-					tracked.runnable =
-						_addedSource.apply(tracked.cachingServiceReference);
-				});
-			}
-		}
+            if (UpdateSupport.sendUpdate(tracked.runnable)) {
+                UpdateSupport.runUpdate(() -> {
+                    tracked.runnable.run();
+                    tracked.cachingServiceReference = new CachingServiceReference<>(
+                        reference);
+                    tracked.runnable =
+                        _addedSource.apply(tracked.cachingServiceReference);
+                });
+            }
+        }
 
-		@Override
-		public void removedService(
-			ServiceReference<T> reference, Tracked<T> tracked) {
+        @Override
+        public void removedService(
+            ServiceReference<T> reference, Tracked<T> tracked) {
 
-			tracked.runnable.run();
-		}
+            tracked.runnable.run();
+        }
 
-		private final Publisher<? super CachingServiceReference<T>> _addedSource;
+        private final Publisher<? super CachingServiceReference<T>> _addedSource;
 
-	}
+    }
 
-	private static class Tracked<T> {
+    private static class Tracked<T> {
 
-		public Tracked(
-			CachingServiceReference<T> cachingServiceReference,
-			OSGiResult osgiResult) {
+        public Tracked(
+            CachingServiceReference<T> cachingServiceReference,
+            OSGiResult osgiResult) {
 
-			this.cachingServiceReference = cachingServiceReference;
-			this.runnable = osgiResult;
-		}
+            this.cachingServiceReference = cachingServiceReference;
+            this.runnable = osgiResult;
+        }
 
-		volatile CachingServiceReference<T> cachingServiceReference;
-		volatile OSGiResult runnable;
+        volatile CachingServiceReference<T> cachingServiceReference;
+        volatile OSGiResult runnable;
 
-	}
+    }
 }
