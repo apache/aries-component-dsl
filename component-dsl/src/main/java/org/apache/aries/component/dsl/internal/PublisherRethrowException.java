@@ -17,6 +17,7 @@
 
 package org.apache.aries.component.dsl.internal;
 
+@SuppressWarnings("serial")
 public class PublisherRethrowException extends Error {
     public PublisherRethrowException(Throwable cause) {
         super(cause);

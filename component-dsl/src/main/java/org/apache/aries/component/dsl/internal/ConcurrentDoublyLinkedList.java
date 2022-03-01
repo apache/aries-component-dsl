@@ -179,8 +179,8 @@ public class ConcurrentDoublyLinkedList<E> extends AbstractCollection<E>
      * Constructs an empty deque.
      */
     public ConcurrentDoublyLinkedList() {
-        NodeImpl h = new NodeImpl(null, null, null);
-        NodeImpl t = new NodeImpl(null, null, h);
+        NodeImpl<E> h = new NodeImpl<>(null, null, null);
+        NodeImpl<E> t = new NodeImpl<>(null, null, h);
         h.setNext(t);
         header = h;
         trailer = t;
@@ -665,6 +665,7 @@ public class ConcurrentDoublyLinkedList<E> extends AbstractCollection<E>
  * unrecoverably stale.
  */
 
+@SuppressWarnings("serial")
 class NodeImpl<E> extends AtomicReference<NodeImpl<E>>
     implements ConcurrentDoublyLinkedList.Node {
 
@@ -933,7 +934,7 @@ class NodeImpl<E> extends AtomicReference<NodeImpl<E>>
         NodeImpl<E> b = getPrev();
         NodeImpl<E> f = getNext();
         if (b != null && f != null && !f.isMarker()
-            && casNext(f, new NodeImpl(f))) {
+            && casNext(f, new NodeImpl<>(f))) {
             if (b.casNext(this, f))
                 f.setPrev(b);
             return true;
@@ -956,7 +957,7 @@ class NodeImpl<E> extends AtomicReference<NodeImpl<E>>
             if (b == null || f == null || f.isMarker())
                 return null;
             NodeImpl<E> x = new NodeImpl<E>(newElement, f, b);
-            if (casNext(f, new NodeImpl(x))) {
+            if (casNext(f, new NodeImpl<>(x))) {
                 b.successor(); // to relink b
                 x.successor(); // to relink f
                 return x;

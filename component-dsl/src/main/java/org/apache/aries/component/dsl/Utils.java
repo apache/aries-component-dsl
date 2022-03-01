@@ -41,10 +41,11 @@ public interface Utils {
                 then(OSGi.just(() -> new ArrayList<>(list)
                 ))
             ).transform(
-                op -> new OnlyLastPublisher(op, () -> new ArrayList<>(list)))
+                op -> new OnlyLastPublisher<>(op, () -> new ArrayList<>(list)))
             );
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     static <K, V, T extends Comparable<T>> OSGi<Map<K, V>> accumulateInMap(
         OSGi<T> program, Function<T, OSGi<K>> keyFun,
         Function<T, OSGi<V>> valueFun) {

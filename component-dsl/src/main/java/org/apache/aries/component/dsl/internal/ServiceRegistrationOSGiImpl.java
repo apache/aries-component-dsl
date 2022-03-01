@@ -87,7 +87,8 @@ public class ServiceRegistrationOSGiImpl<T>
 		ServiceRegistration<?> serviceRegistration,
 		Publisher<? super ServiceRegistration<T>> op) {
 
-		OSGiResult terminator = ((Publisher)op).publish(serviceRegistration);
+		@SuppressWarnings("unchecked")
+		OSGiResult terminator = ((Publisher<Object>)op).publish(serviceRegistration);
 
 		return new OSGiResultImpl(
             () -> {

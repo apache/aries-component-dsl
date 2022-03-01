@@ -34,6 +34,7 @@ public class DistributeOSGiImpl<T, S> extends BaseOSGiImpl<S> {
     public DistributeOSGiImpl(OSGi<T> operation, Function<OSGi<T>, OSGi<S>>... funs) {
 
         super((executionContext, publisher) -> {
+            @SuppressWarnings("unchecked")
             Pad<T, S>[] pads = new Pad[funs.length];
 
             for (int i = 0; i < funs.length; i++) {

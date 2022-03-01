@@ -451,6 +451,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		return register(clazz, service, () -> properties);
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	static OSGi<ServiceRegistration<?>> register(
 		String[] classes, Object service, Map<String, ?> properties) {
 
@@ -472,6 +473,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		return new ServiceRegistrationOSGiImpl<>(clazz, service, properties);
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	static OSGi<ServiceRegistration<?>> register(
 		String[] classes, Supplier<Object> service,
 		Supplier<Map<String, ?>> properties) {
@@ -591,7 +593,7 @@ public interface OSGi<T> extends OSGiRunnable<T> {
 		Function<T, OSGi<Boolean>> chooser, Function<OSGi<T>, OSGi<S>> then,
 		Function<OSGi<T>, OSGi<S>> otherwise);
 
-	<S> OSGi<S> distribute(Function<OSGi<T>, OSGi<S>> ... funs);
+	<S> OSGi<S> distribute(@SuppressWarnings("unchecked") Function<OSGi<T>, OSGi<S>> ... funs);
 
 	default OSGi<T> effects(
 		Consumer<? super T> onAdded, Consumer<? super T> onRemoved) {

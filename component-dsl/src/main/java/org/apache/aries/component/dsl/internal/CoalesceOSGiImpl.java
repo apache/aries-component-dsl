@@ -38,6 +38,7 @@ public class CoalesceOSGiImpl<T> extends OSGiImpl<T> {
             AtomicInteger[] atomicIntegers = new AtomicInteger[programs.length];
             OSGiResult[] results = new OSGiResult[programs.length];
             AtomicInteger index = new AtomicInteger();
+            @SuppressWarnings("unchecked")
             Publisher<T>[] publishers = new Publisher[programs.length];
 
             for (int i = 0; i < atomicIntegers.length; i++) {
