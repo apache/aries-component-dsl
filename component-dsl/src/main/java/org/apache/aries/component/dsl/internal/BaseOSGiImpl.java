@@ -220,7 +220,7 @@ public class BaseOSGiImpl<T> implements OSGi<T> {
 	}
 
 	@Override
-	public <S> OSGi<S> distribute(Function<OSGi<T>, OSGi<S>>... funs) {
+	public <S> OSGi<S> distribute(@SuppressWarnings("unchecked") Function<OSGi<T>, OSGi<S>>... funs) {
 		return new DistributeOSGiImpl<>(this, funs);
 	}
 

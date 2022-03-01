@@ -28,6 +28,7 @@ public class OSGiImpl<T> extends BaseOSGiImpl<T> {
 		super(new ErrorHandlerOSGiRunnable<>(operation));
 	}
 
+	@SuppressWarnings("unchecked")
 	static <T extends Throwable> void rethrow(Throwable t) throws T {
 		throw (T)t;
 	}

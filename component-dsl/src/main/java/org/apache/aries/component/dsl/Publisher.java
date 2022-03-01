@@ -30,6 +30,7 @@ public interface Publisher<T> extends Function<T, Runnable> {
 
     OSGiResult publish(T t);
 
+    @SuppressWarnings("unchecked")
     default <E extends Exception> OSGiResult error(T t, Exception e) throws E {
         throw (E)e;
     }
@@ -42,6 +43,7 @@ public interface Publisher<T> extends Function<T, Runnable> {
                 return next.apply(t);
             }
 
+            @SuppressWarnings("unchecked")
             @Override
             public <E extends Exception> OSGiResult error(S s, Exception e) throws E {
                 return Publisher.this.error((T)s, e);
