@@ -39,7 +39,7 @@
 			<groupId>org.apache.aries.component-dsl</groupId>
 			<artifactId>org.apache.aries.component-dsl.component-dsl</artifactId>
 			<version>${project.version}</version>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.servicemix.bundles</groupId>
@@ -74,8 +74,7 @@
 						</goals>
 						<configuration>
 							<bnd><![CDATA[
-								-includepackage: \
-									org.apache.aries.component.dsl.*;-split-package:=merge-first
+								Fragment-Host: org.apache.aries.component-dsl.component-dsl
 							]]></bnd>
 							<testCases>junit4</testCases>
 						</configuration>
