@@ -75,6 +75,9 @@
 						<configuration>
 							<bnd><![CDATA[
 								Fragment-Host: org.apache.aries.component-dsl.component-dsl
+
+								# This is only happens in m2e presumably because project dependencies are not jars but output directories
+								-fixupmessages: Host * for this fragment/require bundle cannot be found on the classpath
 							]]></bnd>
 							<testCases>junit4</testCases>
 						</configuration>

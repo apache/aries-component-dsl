@@ -87,8 +87,7 @@ public class DSLTest {
         ServiceRegistration<Service> serviceRegistrationOne =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                }});
+                HashTable.of());
 
         expected.add(
             Collections.singletonList(getId(serviceRegistrationOne)));
@@ -100,8 +99,7 @@ public class DSLTest {
         serviceRegistrationOne =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                }});
+                HashTable.of());
 
         expected.add(
             Collections.singletonList(getId(serviceRegistrationOne)));
@@ -109,8 +107,7 @@ public class DSLTest {
         ServiceRegistration<Service> serviceRegistrationTwo =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                }});
+                HashTable.of());
 
         expected.add(
             Arrays.asList(
@@ -154,8 +151,7 @@ public class DSLTest {
         ServiceRegistration<Service> serviceRegistrationOne =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                }});
+                HashTable.of());
 
         expected.add(
             Collections.singletonList(getId(serviceRegistrationOne)));
@@ -165,8 +161,7 @@ public class DSLTest {
         serviceRegistrationOne =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                }});
+                HashTable.of());
 
         expected.add(
             Collections.singletonList(getId(serviceRegistrationOne)));
@@ -174,8 +169,7 @@ public class DSLTest {
         ServiceRegistration<Service> serviceRegistrationTwo =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                }});
+                HashTable.of());
 
         expected.add(
             Arrays.asList(
@@ -497,9 +491,7 @@ public class DSLTest {
         ServiceRegistration<ManagedService> serviceRegistration =
             bundleContext.registerService(
                 ManagedService.class, __ -> countDownLatch.countDown(),
-                new Hashtable<String, Object>() {{
-                    put("service.pid", "test.configuration");
-                }});
+                HashTable.of("service.pid", "test.configuration"));
 
         AtomicReference<Runnable> effect = new AtomicReference<>();
 
@@ -531,10 +523,7 @@ public class DSLTest {
                 .run(bundleContext)
         ) {
             configuration.update(
-                new Hashtable<String, Object>() {{
-                    put("property", "value");
-                }}
-            );
+                HashTable.of("property", "value"));
 
             countDownLatch.await(5, TimeUnit.MINUTES);
 
@@ -560,9 +549,7 @@ public class DSLTest {
                             deleteLatch.countDown();
                         }
                     },
-                    new Hashtable<String, Object>() {{
-                        put("service.pid", "test.configuration");
-                    }});
+                    HashTable.of("service.pid", "test.configuration"));
 
             configuration.delete();
 
@@ -609,9 +596,7 @@ public class DSLTest {
         ServiceRegistration<ManagedService> serviceRegistration =
             bundleContext.registerService(
                 ManagedService.class, __ -> countDownLatch.countDown(),
-                new Hashtable<String, Object>() {{
-                    put("service.pid", "test.configuration");
-                }});
+                HashTable.of("service.pid", "test.configuration"));
 
         AtomicReference<Runnable> effect = new AtomicReference<>();
 
@@ -634,10 +619,7 @@ public class DSLTest {
                 }))
         {
             configuration.update(
-                new Hashtable<String, Object>() {{
-                    put("property", "value");
-                }}
-            );
+                HashTable.of("property", "value"));
 
             countDownLatch.await(5, TimeUnit.MINUTES);
 
@@ -661,9 +643,7 @@ public class DSLTest {
                             deleteLatch.countDown();
                         }
                     },
-                    new Hashtable<String, Object>() {{
-                        put("service.pid", "test.configuration");
-                    }});
+                    HashTable.of("service.pid", "test.configuration"));
 
             configuration.delete();
 
@@ -754,9 +734,7 @@ public class DSLTest {
         ServiceRegistration<ManagedService> serviceRegistration =
             bundleContext.registerService(
                 ManagedService.class, __ -> countDownLatch.countDown(),
-                new Hashtable<String, Object>() {{
-                    put("service.pid", "test.configuration");
-                }});
+                HashTable.of("service.pid", "test.configuration"));
 
         try(OSGiResult result =
                 configuration("test.configuration").run(
@@ -853,11 +831,10 @@ public class DSLTest {
                 map(d -> d.get("key")).flatMap(key ->
             register(
                 Service.class, new Service(),
-                new HashMap<String, Object>() {{
-                    put("key", key);
-                    put("test.configuration", true);
-                }})
-            );
+                HashTable.of(h -> {
+                    h.put("key", key);
+                    h.put("test.configuration", true);
+                })));
 
         OSGiResult result = program.run(
             bundleContext);
@@ -901,23 +878,17 @@ public class DSLTest {
         Configuration configuration =
             configurationAdmin.createFactoryConfiguration("test.configuration");
 
-        configuration.update(new Hashtable<String, Object>(){{
-            put("key", "service one");
-        }});
+        configuration.update(HashTable.of("key", "service one"));
 
         Configuration configuration2 =
             configurationAdmin.createFactoryConfiguration("test.configuration");
 
-        configuration2.update(new Hashtable<String, Object>(){{
-            put("key", "service two");
-        }});
+        configuration2.update(HashTable.of("key", "service two"));
 
         Configuration configuration3 =
             configurationAdmin.createFactoryConfiguration("test.configuration");
 
-        configuration3.update(new Hashtable<String, Object>(){{
-            put("key", "service three");
-        }});
+        configuration3.update(HashTable.of("key", "service three"));
 
         assertTrue(addedLatch.await(5, TimeUnit.MINUTES));
 
@@ -973,18 +944,14 @@ public class DSLTest {
             ServiceRegistration<Service> serviceRegistrationOne =
                 bundleContext.registerService(
                     Service.class, new Service(),
-                    new Hashtable<String, Object>() {{
-                        put("service.ranking", 0);
-                    }});
+                    HashTable.of("service.ranking", 0));
 
             assertEquals(Collections.emptyList(), discards);
 
             ServiceRegistration<Service> serviceRegistrationTwo =
                 bundleContext.registerService(
                     Service.class, new Service(),
-                    new Hashtable<String, Object>() {{
-                        put("service.ranking", 1);
-                    }});
+                    HashTable.of("service.ranking", 1));
 
             assertEquals(
                 Collections.singletonList(
@@ -994,9 +961,7 @@ public class DSLTest {
             ServiceRegistration<Service> serviceRegistrationMinusOne =
                 bundleContext.registerService(
                     Service.class, new Service(),
-                    new Hashtable<String, Object>() {{
-                        put("service.ranking", -1);
-                    }});
+                    HashTable.of("service.ranking", -1));
 
             assertEquals(
                 Arrays.asList(
@@ -1017,9 +982,7 @@ public class DSLTest {
             serviceRegistrationOne =
                 bundleContext.registerService(
                     Service.class, new Service(),
-                    new Hashtable<String, Object>() {{
-                        put("service.ranking", 0);
-                    }});
+                    HashTable.of("service.ranking", 0));
 
             assertEquals(
                 Arrays.asList(serviceRegistrationMinusOne.getReference()),
@@ -1045,9 +1008,7 @@ public class DSLTest {
             ServiceRegistration<Service> serviceRegistrationOne =
                 bundleContext.registerService(
                     Service.class, new Service(),
-                    new Hashtable<String, Object>() {{
-                        put("service.ranking", 0);
-                    }});
+                    HashTable.of("service.ranking", 0));
 
             assertEquals(
                 serviceRegistrationOne.getReference(),
@@ -1056,9 +1017,7 @@ public class DSLTest {
             ServiceRegistration<Service> serviceRegistrationTwo =
                 bundleContext.registerService(
                     Service.class, new Service(),
-                    new Hashtable<String, Object>() {{
-                        put("service.ranking", 1);
-                    }});
+                    HashTable.of("service.ranking", 1));
 
             assertEquals(
                 serviceRegistrationTwo.getReference(),
@@ -1067,9 +1026,7 @@ public class DSLTest {
             ServiceRegistration<Service> serviceRegistrationMinusOne =
                 bundleContext.registerService(
                     Service.class, new Service(),
-                    new Hashtable<String, Object>() {{
-                        put("service.ranking", -1);
-                    }});
+                    HashTable.of("service.ranking", -1));
 
             assertEquals(
                 serviceRegistrationTwo.getReference(),
@@ -1090,9 +1047,7 @@ public class DSLTest {
             serviceRegistrationOne =
                 bundleContext.registerService(
                     Service.class, new Service(),
-                    new Hashtable<String, Object>() {{
-                        put("service.ranking", 0);
-                    }});
+                    HashTable.of("service.ranking", 0));
 
             assertEquals(
                 serviceRegistrationOne.getReference(),
@@ -1247,6 +1202,7 @@ public class DSLTest {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testDistributeWithError() {
         ArrayList<Integer> results1 = new ArrayList<>();
@@ -1340,12 +1296,14 @@ public class DSLTest {
         ArrayList<Object> result = new ArrayList<>();
         ArrayList<Object> left = new ArrayList<>();
 
+        @SuppressWarnings("deprecation")
         OSGi<Integer> program = just(
             Arrays.asList(1, 2, 3, 4, 5, 6)
         ).recoverWith(
             (__, e) -> just(0)
         ).flatMap(t ->
-            onClose(() -> left.add(t)).then(just(t))
+            effects(() -> {}, () -> left.add(t)).then(
+            just(t))
         ).
         flatMap(t -> {
             if (t % 2 != 0) {
@@ -1422,7 +1380,7 @@ public class DSLTest {
         };
 
         OSGi<?> program =
-            onClose(() -> closed.set(true)).foreach(
+            effects(() -> {}, () -> closed.set(true)).foreach(
             ign -> executed.set(true)
         );
 
@@ -1437,9 +1395,7 @@ public class DSLTest {
             ServiceRegistration<Service> serviceRegistrationOne =
                 bundleContext.registerService(
                     Service.class, new Service(),
-                    new Hashtable<String, Object>() {{
-                        put("key", "service one");
-                    }});
+                    HashTable.of("key", "service one"));
 
             assertFalse(closed.get());
             assertFalse(executed.get());
@@ -1447,9 +1403,7 @@ public class DSLTest {
             ServiceRegistration<Service> serviceRegistrationTwo =
                 bundleContext.registerService(
                     Service.class, new Service(),
-                    new Hashtable<String, Object>() {{
-                        put("key", "service two");
-                    }});
+                    HashTable.of("key", "service two"));
 
             assertFalse(closed.get());
             assertFalse(executed.get());
@@ -1457,9 +1411,7 @@ public class DSLTest {
             ServiceRegistration<Service> serviceRegistrationThree =
                 bundleContext.registerService(
                     Service.class, new Service(),
-                    new Hashtable<String, Object>() {{
-                        put("key", "service three");
-                    }});
+                    HashTable.of("key", "service three"));
 
             assertFalse(closed.get());
             assertTrue(executed.get());
@@ -1480,6 +1432,7 @@ public class DSLTest {
         ArrayList<Object> arrived = new ArrayList<>();
         ArrayList<Object> left = new ArrayList<>();
 
+        @SuppressWarnings("deprecation")
         OSGi<Integer> program = just(
             Arrays.asList(1, 2, 3, 4, 5, 6)
         ).recover(
@@ -1516,6 +1469,7 @@ public class DSLTest {
         ArrayList<Object> arrived = new ArrayList<>();
         ArrayList<Object> left = new ArrayList<>();
 
+        @SuppressWarnings("deprecation")
         OSGi<Integer> program = just(
             Arrays.asList(1, 2, 3, 4, 5, 6)
         ).recoverWith(
@@ -1835,10 +1789,10 @@ public class DSLTest {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("good", 0);
-                    put("bad", 0);
-                }});
+                HashTable.of(h -> {
+                    h.put("good", 0);
+                    h.put("bad", 0);
+                }));
 
         AtomicInteger atomicInteger = new AtomicInteger();
 
@@ -1860,18 +1814,18 @@ public class DSLTest {
             assertEquals(1, atomicInteger.get());
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("good", 0);
-                    put("bad", 1);
-                }});
+                HashTable.of(h -> {
+                    h.put("good", 0);
+                    h.put("bad", 1);
+                }));
 
             assertEquals(1, atomicInteger.get());
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("good", 1);
-                    put("bad", 1);
-                }});
+                HashTable.of(h -> {
+                    h.put("good", 1);
+                    h.put("bad", 1);
+                }));
 
             assertEquals(2, atomicInteger.get());
         }
@@ -1887,9 +1841,7 @@ public class DSLTest {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("property", "original");
-                }});
+                HashTable.of("property", "original"));
 
         AtomicInteger atomicInteger = new AtomicInteger();
 
@@ -1919,17 +1871,13 @@ public class DSLTest {
             assertEquals("original", atomicReference.get());
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "updated");
-                }});
+                HashTable.of("property", "updated"));
 
             assertEquals(1, atomicInteger.get());
             assertEquals("updated", atomicReference.get());
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "refresh");
-                }});
+                HashTable.of("property", "refresh"));
 
             assertEquals(2, atomicInteger.get());
             assertEquals("refresh", atomicReference.get());
@@ -1946,10 +1894,10 @@ public class DSLTest {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("property", "original");
-                    put("admissible", "true");
-                }});
+                HashTable.of(h -> {
+                    h.put("property", "original");
+                    h.put("admissible", "true");
+                }));
 
         AtomicInteger atomicInteger = new AtomicInteger();
 
@@ -1982,19 +1930,19 @@ public class DSLTest {
             assertEquals("original", atomicReference.get());
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "updated");
-                    put("admissible", "true");
-                }});
+                HashTable.of(h -> {
+                    h.put("property", "updated");
+                    h.put("admissible", "true");
+                }));
 
             assertEquals(1, atomicInteger.get());
             assertEquals("updated", atomicReference.get());
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "updated");
-                    put("admissible", "false");
-                }});
+                HashTable.of(h -> {
+                    h.put("property", "updated");
+                    h.put("admissible", "false");
+                }));
 
             assertEquals(1, atomicInteger.get());
             assertNull(atomicReference.get());
@@ -2011,9 +1959,7 @@ public class DSLTest {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("property", "original");
-                }});
+                HashTable.of("property", "original"));
 
         AtomicInteger atomicInteger = new AtomicInteger();
 
@@ -2041,17 +1987,13 @@ public class DSLTest {
             assertEquals("original", atomicReference.get());
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "updated");
-                }});
+                HashTable.of("property", "updated"));
 
             assertEquals(1, atomicInteger.get());
             assertEquals("updated", atomicReference.get());
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "refresh");
-                }});
+                HashTable.of("property", "refresh"));
 
             assertEquals(2, atomicInteger.get());
             assertEquals("refresh", atomicReference.get());
@@ -2100,7 +2042,7 @@ public class DSLTest {
 
         OSGi<CachingServiceReference<Service>> program =
             serviceReferences(Service.class).flatMap(ref ->
-            onClose(() -> atomicReference.set(null)).
+            effects(() -> {}, () -> atomicReference.set(null)).
             then(just(ref))
         );
 
@@ -2157,60 +2099,52 @@ public class DSLTest {
         ServiceRegistration<Service> serviceRegistrationOne =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("key", new String[]{"a"});
-                }});
+                HashTable.of("key", new String[]{"a"}));
 
         assertEquals(
-            new HashMap<String, String>() {{
-                put("a", getId(serviceRegistrationOne));
-            }},
+            HashTable.of("a", getId(serviceRegistrationOne)),
             map.get());
 
         ServiceRegistration<Service> serviceRegistrationTwo =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("key", new String[]{"b"});
-                }});
+                HashTable.of("key", new String[]{"b"}));
 
         assertEquals(
-            new HashMap<String, String>() {{
-                put("a", getId(serviceRegistrationOne));
-                put("b", getId(serviceRegistrationTwo));
-            }},
+            HashTable.of(h -> {
+                h.put("a", getId(serviceRegistrationOne));
+                h.put("b", getId(serviceRegistrationTwo));
+            }),
             map.get());
 
         ServiceRegistration<Service> serviceRegistrationThree =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("key", new String[]{"a", "b"});
-                    put("service.ranking", 10);
-                }});
+                HashTable.of(h -> {
+                    h.put("key", new String[]{"a", "b"});
+                    h.put("service.ranking", 10);
+                }));
 
         assertEquals(
-            new HashMap<String, String>() {{
-                put("a", getId(serviceRegistrationThree));
-                put("b", getId(serviceRegistrationThree));
-            }},
+            HashTable.of(h -> {
+                h.put("a", getId(serviceRegistrationThree));
+                h.put("b", getId(serviceRegistrationThree));
+            }),
             map.get());
 
         serviceRegistrationThree.unregister();
 
         assertEquals(
-            new HashMap<String, String>() {{
-                put("a", getId(serviceRegistrationOne));
-                put("b", getId(serviceRegistrationTwo));
-            }},
+            HashTable.of(h -> {
+                h.put("a", getId(serviceRegistrationOne));
+                h.put("b", getId(serviceRegistrationTwo));
+            }),
             map.get());
 
         serviceRegistrationTwo.unregister();
 
         assertEquals(
-            new HashMap<String, String>() {{
-                put("a", getId(serviceRegistrationOne));
-            }},
+            HashTable.of("a", getId(serviceRegistrationOne)),
             map.get());
 
         serviceRegistrationOne.unregister();
@@ -2230,9 +2164,7 @@ public class DSLTest {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("property", "original");
-                }});
+                HashTable.of("property", "original"));
 
         try (
             OSGiResult osgiResult =
@@ -2260,9 +2192,7 @@ public class DSLTest {
             assertEquals(Collections.singletonList("effect"), effects);
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "updated");
-                }});
+                HashTable.of("property", "updated"));
 
             assertEquals(Collections.singletonList("effect"), effects);
             assertEquals(Collections.singletonList("first"), updateEffects);
@@ -2279,9 +2209,7 @@ public class DSLTest {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("property", "original");
-                }});
+                HashTable.of("property", "original"));
 
         try (
             OSGiResult osgiResult =
@@ -2302,9 +2230,7 @@ public class DSLTest {
             assertEquals(Collections.emptyList(), updateEffects);
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "updated");
-                }});
+                HashTable.of("property", "updated"));
 
             assertEquals(Arrays.asList("first", "second"), updateEffects);
         }
@@ -2320,9 +2246,7 @@ public class DSLTest {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("property", "original");
-                }});
+                HashTable.of("property", "original"));
 
         try (
             OSGiResult osgiResult =
@@ -2346,9 +2270,7 @@ public class DSLTest {
             assertEquals(Collections.emptyList(), updateEffects);
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "updated");
-                }});
+                HashTable.of("property", "updated"));
 
             assertEquals(Collections.emptyList(), updateEffects);
         }

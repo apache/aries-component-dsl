@@ -30,7 +30,6 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
-import java.util.Hashtable;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -96,9 +95,7 @@ public class AsynchronousTest {
                             bundleContext.registerService(
                                 Service.class,
                                 new Service(ii),
-                                new Hashtable<String, Object>() {{
-                                    put("property", "a");
-                                }});
+                                HashTable.of("property", "a"));
 
                         ignoreException(() -> Thread.sleep(random.nextInt(2)));
 
@@ -111,9 +108,7 @@ public class AsynchronousTest {
                             bundleContext.registerService(
                                 Service.class,
                                 new Service(jj),
-                                new Hashtable<String, Object>() {{
-                                    put("property", "b");
-                                }});
+                                HashTable.of("property", "b"));
 
                         ignoreException(() -> Thread.sleep(random.nextInt(2)));
 
@@ -126,9 +121,7 @@ public class AsynchronousTest {
                             bundleContext.registerService(
                                 Service.class,
                                 new Service(kk),
-                                new Hashtable<String, Object>() {{
-                                    put("property", "c");
-                                }});
+                                HashTable.of("property", "c"));
 
                         ignoreException(() -> Thread.sleep(random.nextInt(2)));
 
@@ -226,9 +219,7 @@ public class AsynchronousTest {
                             bundleContext.registerService(
                                 Service.class,
                                 new Service(ii),
-                                new Hashtable<String, Object>() {{
-                                    put("property", "a");
-                                }});
+                                HashTable.of("property", "a"));
 
                         ignoreException(() -> Thread.sleep(random.nextInt(2)));
 
@@ -241,9 +232,7 @@ public class AsynchronousTest {
                             bundleContext.registerService(
                                 Service.class,
                                 new Service(jj),
-                                new Hashtable<String, Object>() {{
-                                    put("property", "b");
-                                }});
+                                HashTable.of("property", "b"));
 
                         ignoreException(() -> Thread.sleep(random.nextInt(2)));
 
@@ -258,10 +247,7 @@ public class AsynchronousTest {
                                     "configurationc");
 
                             configurationc.update(
-                                new Hashtable<String, Object>() {{
-                                    put("property", kk);
-                                }}
-                            );
+                                HashTable.of("property", kk));
 
                             configurationc.delete();
                         }));
