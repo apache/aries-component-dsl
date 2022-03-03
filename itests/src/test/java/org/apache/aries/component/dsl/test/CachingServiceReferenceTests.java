@@ -25,7 +25,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import java.util.Arrays;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -46,22 +45,17 @@ public class CachingServiceReferenceTests {
         ServiceRegistration<Service> serviceRegistrationNoRanking =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                }});
+                HashTable.of());
 
         ServiceRegistration<Service> serviceRegistrationOne =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("service.ranking", 1);
-                }});
+                HashTable.of("service.ranking", 1));
 
         ServiceRegistration<Service> serviceRegistrationMinusOne =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("service.ranking", -1);
-                }});
+                HashTable.of("service.ranking", -1));
 
         try {
             TreeSet<CachingServiceReference<?>> set = new TreeSet<>();
@@ -104,8 +98,7 @@ public class CachingServiceReferenceTests {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                }});
+                HashTable.of());
 
         try {
             ServiceReference<Service> serviceReference =
@@ -119,10 +112,7 @@ public class CachingServiceReferenceTests {
                 cachingServiceReference.getProperty("property"));
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "value2");
-                }}
-            );
+                HashTable.of("property", "value2"));
 
             assertEquals(serviceReference.getProperty("property"), "value2");
 
@@ -140,8 +130,7 @@ public class CachingServiceReferenceTests {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                }});
+                HashTable.of());
 
         try {
             ServiceReference<Service> serviceReference =
@@ -162,10 +151,7 @@ public class CachingServiceReferenceTests {
             assertFalse(properties.contains("property"));
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "value2");
-                }}
-            );
+                HashTable.of("property", "value2"));
 
             assertEquals(serviceReference.getProperty("property"), "value2");
 
@@ -183,9 +169,7 @@ public class CachingServiceReferenceTests {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("property", "value");
-                }});
+                HashTable.of("property", "value"));
 
         try {
             ServiceReference<Service> serviceReference =
@@ -199,10 +183,7 @@ public class CachingServiceReferenceTests {
                 cachingServiceReference.getProperty("property"));
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "value2");
-                }}
-            );
+                HashTable.of("property", "value2"));
 
             assertEquals(serviceReference.getProperty("property"), "value2");
 
@@ -219,9 +200,7 @@ public class CachingServiceReferenceTests {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("property", "value");
-                }});
+                HashTable.of("property", "value"));
 
         try {
             ServiceReference<Service> serviceReference =
@@ -238,10 +217,7 @@ public class CachingServiceReferenceTests {
                 serviceReference.getProperty("property"),
                 cachingServiceReference.getProperty("property"));
 
-            serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                }}
-            );
+            serviceRegistration.setProperties(HashTable.of());
 
             assertNull(serviceReference.getProperty("property"));
 
@@ -265,9 +241,7 @@ public class CachingServiceReferenceTests {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("property", "value");
-                }});
+                HashTable.of("property", "value"));
 
         try {
             ServiceReference<Service> serviceReference =
@@ -281,10 +255,7 @@ public class CachingServiceReferenceTests {
                 cachingServiceReference.getProperty("property"));
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "value2");
-                }}
-            );
+                HashTable.of("property", "value2"));
 
             assertTrue(cachingServiceReference.isDirty());
         }
@@ -298,9 +269,8 @@ public class CachingServiceReferenceTests {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("property", "value");
-                }});
+                HashTable.of("property", "value"));
+
         try {
             ServiceReference<Service> serviceReference =
                 serviceRegistration.getReference();
@@ -309,10 +279,7 @@ public class CachingServiceReferenceTests {
                 new CachingServiceReference<>(serviceReference);
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "value2");
-                }}
-            );
+                HashTable.of("property", "value2"));
 
             assertFalse(cachingServiceReference.isDirty());
         }
@@ -326,9 +293,8 @@ public class CachingServiceReferenceTests {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("property", "value");
-                }});
+                HashTable.of("property", "value"));
+
         try {
             ServiceReference<Service> serviceReference =
                 serviceRegistration.getReference();
@@ -337,10 +303,7 @@ public class CachingServiceReferenceTests {
                 new CachingServiceReference<>(serviceReference);
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "value2");
-                }}
-            );
+                HashTable.of("property", "value2"));
 
             assertFalse(cachingServiceReference.isDirty("property"));
 
@@ -350,10 +313,7 @@ public class CachingServiceReferenceTests {
             assertFalse(cachingServiceReference.isDirty("property"));
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "value3");
-                }}
-            );
+                HashTable.of("property", "value3"));
 
             assertTrue(cachingServiceReference.isDirty("property"));
         }
@@ -367,8 +327,8 @@ public class CachingServiceReferenceTests {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                }});
+                HashTable.of());
+
         try {
             ServiceReference<Service> serviceReference =
                 serviceRegistration.getReference();
@@ -389,9 +349,8 @@ public class CachingServiceReferenceTests {
         ServiceRegistration<Service> serviceRegistration =
             bundleContext.registerService(
                 Service.class, new Service(),
-                new Hashtable<String, Object>() {{
-                    put("property", "value");
-                }});
+                HashTable.of("property", "value"));
+
         try {
             ServiceReference<Service> serviceReference =
                 serviceRegistration.getReference();
@@ -400,10 +359,7 @@ public class CachingServiceReferenceTests {
                 new CachingServiceReference<>(serviceReference);
 
             serviceRegistration.setProperties(
-                new Hashtable<String, Object>() {{
-                    put("property", "value2");
-                }}
-            );
+                HashTable.of("property", "value2"));
 
             assertEquals(
                 serviceReference.getProperty("property"),

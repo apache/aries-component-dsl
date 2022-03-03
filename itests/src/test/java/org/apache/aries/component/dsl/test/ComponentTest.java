@@ -100,9 +100,7 @@ public class ComponentTest {
 
         _bundleContext.registerService(
             ManagedService.class, dictionary -> countDownLatch.countDown(),
-            new Hashtable<String, Object>() {{
-                put("service.pid", "org.components.MyComponent");
-            }});
+            HashTable.of("service.pid", "org.components.MyComponent"));
 
         Configuration factoryConfiguration = null;
 
@@ -139,9 +137,7 @@ public class ComponentTest {
             ServiceRegistration<ServiceOptional> serviceRegistration3 =
                 _bundleContext.registerService(
                     ServiceOptional.class, serviceOptional,
-                    new Hashtable<String, Object>() {{
-                        put("service.ranking", 1);
-                    }});
+                    HashTable.of("service.ranking", 1));
 
             assertEquals(serviceOptional, component.getOptional());
 
@@ -277,9 +273,7 @@ public class ComponentTest {
             ServiceRegistration<ServiceOptional> serviceRegistration3 =
                 _bundleContext.registerService(
                     ServiceOptional.class, serviceOptional,
-                    new Hashtable<String, Object>() {{
-                        put("service.ranking", 1);
-                    }});
+                    HashTable.of("service.ranking", 1));
 
             assertEquals(serviceOptional, component.getOptional());
 
@@ -337,7 +331,7 @@ public class ComponentTest {
                     CachingServiceReference::getServiceReference).
                 flatMap(sr ->
             bundleContext().flatMap(bc ->
-            onClose(() -> bc.ungetService(sr)).then(
+            effects(() -> bc.ungetService(sr), () -> {}).then(
             just(bc.getService(sr))
             )));
     }
@@ -348,6 +342,7 @@ public class ComponentTest {
         return program.foreach(bind, unbind);
     }
 
+    @SuppressWarnings("unused")
     private class Component {
 
         final Dictionary<String, ?> configuration;

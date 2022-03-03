@@ -29,6 +29,12 @@ public class HashTable {
         return of(h -> {});
     }
 
+    public static <K, V> Hashtable<K, V> of(K k, V v) {
+        Hashtable<K, V> hashtable = new Hashtable<>();
+        hashtable.put(k, v);
+        return hashtable;
+    }
+
     public static <K, V> Hashtable<K, V> of(Consumer<Hashtable<K, V>> t) {
         Hashtable<K, V> hashtable = new Hashtable<>();
         t.accept(hashtable);
