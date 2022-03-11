@@ -46,7 +46,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.10.0</version><!--$NO-MVN-MAN-VER$-->
+				<version>3.10.1</version><!--$NO-MVN-MAN-VER$-->
 			</plugin>
 			<plugin>
 				<groupId>biz.aQute.bnd</groupId>
